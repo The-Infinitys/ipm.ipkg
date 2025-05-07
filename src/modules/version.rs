@@ -1,3 +1,5 @@
+use std::fmt;
+
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Version {
@@ -176,6 +178,12 @@ impl Version {
                 Some(range_data)
             }
         })?
+    }
+}
+
+impl fmt::Display for Version{
+    fn fmt(&self,f:&mut fmt::Formatter) -> fmt::Result{
+        write!(f,"{}",self.string)
     }
 }
 
