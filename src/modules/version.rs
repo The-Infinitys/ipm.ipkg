@@ -1,5 +1,4 @@
-use std::fmt;
-
+use std::fmt::{self};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Version {
@@ -48,6 +47,16 @@ fn serialize_version_str(version_str: &str) -> (Vec<u32>, Vec<String>) {
     (numbers, separators)
 }
 
+impl Default for Version {
+    fn default() -> Self {
+        return Version {
+            string: "".to_string(),
+            nums: Vec::new(),
+            separators: Vec::new(),
+        };
+    }
+}
+
 impl Version {
     pub fn from_str(version_str: &str) -> Version {
         let (nums, separators) = serialize_version_str(version_str);
@@ -57,7 +66,6 @@ impl Version {
             separators,
         }
     }
-
     fn insert_to_range_data(
         &self,
         range_data: Option<RangeData>,
@@ -181,9 +189,9 @@ impl Version {
     }
 }
 
-impl fmt::Display for Version{
-    fn fmt(&self,f:&mut fmt::Formatter) -> fmt::Result{
-        write!(f,"{}",self.string)
+impl fmt::Display for Version {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.string)
     }
 }
 
@@ -310,6 +318,14 @@ impl VersionRange {
     }
 }
 
+impl Default for VersionRange {
+    fn default() -> Self {
+        return VersionRange {
+            _range_data: None,
+            string: "*".to_string(),
+        };
+    }
+}
 impl RangeData {
     pub fn to_string(&self) -> String {
         let mut parts = Vec::new();
@@ -336,6 +352,11 @@ impl RangeData {
     }
 }
 
+impl fmt::Display for VersionRange {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.string)
+    }
+}
 pub fn test() {
     let version1 = Version::from_str("1.2.3");
     let version2 = Version::from_str("1.2.2-build-4");
