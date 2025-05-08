@@ -1,2 +1,2 @@
-pub mod version;
 pub mod pkg;
+pub mod version;

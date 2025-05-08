@@ -197,8 +197,7 @@ impl PartialOrd for Version {
     }
 }
 
-#[derive(Clone, Debug)]
-#[derive(Default)]
+#[derive(Clone, Debug, Default)]
 pub struct VersionRange {
     _range_data: Option<RangeData>,
 }
@@ -294,10 +293,10 @@ impl VersionRange {
 }
 impl Display for VersionRange {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        if self._range_data.is_none(){
+        if self._range_data.is_none() {
             return write!(f, "*");
         }
-        write!(f,"")
+        write!(f, "")
     }
 }
 

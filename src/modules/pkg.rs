@@ -1,5 +1,5 @@
-use std::fmt;
 use super::version::{Version, VersionRange};
+use std::fmt;
 
 // 構造体の定義
 #[derive(Default)]
@@ -58,12 +58,6 @@ pub struct PkgRange {
 }
 
 // Defaultトレイトの実装
-
-
-
-
-
-
 
 // PackageInfoのnewメソッド
 impl PackageInfo {
@@ -185,11 +179,7 @@ impl fmt::Display for PackageInfo {
 
         // Build Relationsの表示
         writeln!(f, "Build Relations:")?;
-        writeln!(
-            f,
-            "  Depends: {}",
-            format_dep(&self.build_relation.depends)
-        )?;
+        writeln!(f, "  Depends: {}", format_dep(&self.build_relation.depends))?;
 
         // Virtual Packagesの表示
         writeln!(
