@@ -1,4 +1,3 @@
-use std::fmt::{self};
 use std::{fmt, fmt::Display, str::FromStr};
 
 #[derive(Debug, PartialEq, Clone)]
@@ -6,6 +5,11 @@ pub struct Version {
     string: String,
     nums: Vec<u32>,
     separators: Vec<String>,
+}
+impl Default for Version {
+    fn default() -> Self {
+        Version::from_str("1.0.0").unwrap()
+    }
 }
 fn serialize_version_str(version_str: &str) -> (Vec<u32>, Vec<String>) {
     let mut numbers = Vec::new();
@@ -48,16 +52,6 @@ fn serialize_version_str(version_str: &str) -> (Vec<u32>, Vec<String>) {
     (numbers, separators)
 }
 
-impl Default for Version {
-    fn default() -> Self {
-        return Version {
-            string: "".to_string(),
-            nums: Vec::new(),
-            separators: Vec::new(),
-        };
-    }
-}
-
 impl FromStr for Version {
     type Err = String;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -69,8 +63,6 @@ impl FromStr for Version {
             string: s.to_string(),
             nums,
             separators,
-        }
-    }
         })
     }
 }
@@ -180,9 +172,6 @@ impl Version {
 impl fmt::Display for Version {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.string)
-impl fmt::Display for Version {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.string)
     }
 }
 
@@ -209,6 +198,7 @@ impl PartialOrd for Version {
 }
 
 #[derive(Clone, Debug)]
+#[derive(Default)]
 pub struct VersionRange {
     _range_data: Option<RangeData>,
 }
@@ -302,17 +292,15 @@ impl VersionRange {
         })
     }
 }
-
-impl Default for VersionRange {
-    fn default() -> Self {
-        return VersionRange {
-            _range_data: None,
-            string: "*".to_string(),
-        };
+impl Display for VersionRange {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        if self._range_data.is_none(){
+            return write!(f, "*");
+        }
+        write!(f,"")
     }
 }
-impl RangeData {
-    pub fn to_string(&self) -> String {
+
 impl Display for RangeData {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut parts = Vec::new();
@@ -339,11 +327,6 @@ impl Display for RangeData {
     }
 }
 
-impl fmt::Display for VersionRange {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.string)
-    }
-}
 pub fn test() {
     let version1 = Version::from_str("1.2.3").unwrap();
     let version2 = Version::from_str("1.2.2-build-4").unwrap();

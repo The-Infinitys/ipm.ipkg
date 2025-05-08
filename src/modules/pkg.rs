@@ -2,6 +2,7 @@ use std::fmt;
 use super::version::{Version, VersionRange};
 
 // 構造体の定義
+#[derive(Default)]
 pub struct PackageInfo {
     about: AboutInfo,
     install_relation: RelationInfo,
@@ -9,6 +10,7 @@ pub struct PackageInfo {
     virt_pkg: Vec<PkgVersion>,
 }
 
+#[derive(Default)]
 pub struct AboutInfo {
     name: String,
     id: String,
@@ -18,6 +20,7 @@ pub struct AboutInfo {
     size: u64,
 }
 
+#[derive(Default)]
 pub struct AuthorInfo {
     name: String,
     id: String,
@@ -25,6 +28,7 @@ pub struct AuthorInfo {
     website: Option<String>,
 }
 
+#[derive(Default)]
 pub struct RelationInfo {
     depends: Vec<Vec<PkgRange>>,
     pre_depends: Vec<Vec<PkgRange>>,
@@ -36,96 +40,30 @@ pub struct RelationInfo {
     replaces: Vec<PkgRange>,
 }
 
+#[derive(Default)]
 pub struct BuildRelationInfo {
     depends: Vec<Vec<PkgRange>>,
 }
 
+#[derive(Default)]
 pub struct PkgVersion {
     name: String,
     version: Version,
 }
 
+#[derive(Default)]
 pub struct PkgRange {
     name: String,
     range: VersionRange,
 }
 
 // Defaultトレイトの実装
-impl Default for AuthorInfo {
-    fn default() -> Self {
-        Self {
-            name: String::new(),
-            id: String::new(),
-            email: None,
-            website: None,
-        }
-    }
-}
 
-impl Default for PkgRange {
-    fn default() -> Self {
-        Self {
-            name: String::new(),
-            range: VersionRange::default(),
-        }
-    }
-}
 
-impl Default for PkgVersion {
-    fn default() -> Self {
-        Self {
-            name: String::new(),
-            version: Version::default(),
-        }
-    }
-}
 
-impl Default for RelationInfo {
-    fn default() -> Self {
-        Self {
-            depends: Vec::new(),
-            pre_depends: Vec::new(),
-            recommends: Vec::new(),
-            suggests: Vec::new(),
-            extension: Vec::new(),
-            breaks: Vec::new(),
-            conflicts: Vec::new(),
-            replaces: Vec::new(),
-        }
-    }
-}
 
-impl Default for BuildRelationInfo {
-    fn default() -> Self {
-        Self {
-            depends: Vec::new(),
-        }
-    }
-}
 
-impl Default for AboutInfo {
-    fn default() -> Self {
-        Self {
-            name: String::new(),
-            id: String::new(),
-            version: Version::default(),
-            description: String::new(),
-            author: AuthorInfo::default(),
-            size: 0,
-        }
-    }
-}
 
-impl Default for PackageInfo {
-    fn default() -> Self {
-        Self {
-            about: AboutInfo::default(),
-            install_relation: RelationInfo::default(),
-            build_relation: BuildRelationInfo::default(),
-            virt_pkg: Vec::new(),
-        }
-    }
-}
 
 // PackageInfoのnewメソッド
 impl PackageInfo {
