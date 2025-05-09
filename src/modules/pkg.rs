@@ -1,209 +1,93 @@
+use colored::Colorize;
+use std::fmt::Display;
+
 use super::version::{Version, VersionRange};
-use std::fmt;
 
-// 構造体の定義
-#[derive(Default)]
-pub struct PackageInfo {
-    about: AboutInfo,
-    install_relation: RelationInfo,
-    build_relation: BuildRelationInfo,
-    virt_pkg: Vec<PkgVersion>,
+pub struct PackageData {
+    pub about: AboutData,
+    pub relation: RelationData,
 }
-
-#[derive(Default)]
-pub struct AboutInfo {
-    name: String,
-    id: String,
-    version: Version,
-    description: String,
-    author: AuthorInfo,
-    size: u64,
+pub struct AboutData {
+    pub author: AuthorAboutData,
+    pub package: PackageAboutData,
 }
-
-#[derive(Default)]
-pub struct AuthorInfo {
-    name: String,
-    id: String,
-    email: Option<String>,
-    website: Option<String>,
+pub struct AuthorAboutData {
+    pub name: String,
+    pub email: String,
 }
-
-#[derive(Default)]
-pub struct RelationInfo {
-    depends: Vec<Vec<PkgRange>>,
-    pre_depends: Vec<Vec<PkgRange>>,
-    recommends: Vec<Vec<PkgRange>>,
-    suggests: Vec<Vec<PkgRange>>,
-    extension: Vec<PkgVersion>,
-    breaks: Vec<PkgRange>,
-    conflicts: Vec<PkgRange>,
-    replaces: Vec<PkgRange>,
+pub struct PackageAboutData {
+    pub name: String,
+    pub version: Version,
 }
-
-#[derive(Default)]
-pub struct BuildRelationInfo {
-    depends: Vec<Vec<PkgRange>>,
+pub struct RelationData {
+    pub depend: Vec<DependPackageData>,
+    pub conflict: Vec<DependPackageData>,
 }
-
-#[derive(Default)]
-pub struct PkgVersion {
-    name: String,
-    version: Version,
+pub struct DependPackageData {
+    pub name: String,
+    pub version: VersionRange,
 }
+impl Display for PackageData {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(
+            f,
+            "{} {}",
+            "Package:".bold(),
+            self.about.package.name.cyan()
+        )?;
+        writeln!(f, "{} {}", "Version:".bold(), self.about.package.version)?;
+        writeln!(
+            f,
+            "{} {} <{}>",
+            "Author:".bold(),
+            self.about.author.name,
+            self.about.author.email
+        )?;
 
-#[derive(Default)]
-pub struct PkgRange {
-    name: String,
-    range: VersionRange,
-}
-
-// Defaultトレイトの実装
-
-// PackageInfoのnewメソッド
-impl PackageInfo {
-    pub fn new() -> Self {
-        Self::default()
-    }
-}
-
-// Displayトレイトの実装
-impl fmt::Display for PkgVersion {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", self.name, self.version)
-    }
-}
-
-impl fmt::Display for PkgRange {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", self.name, self.range)
-    }
-}
-
-impl fmt::Display for PackageInfo {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        // AboutInfoの表示
-        writeln!(f, "Package: {} ({})", self.about.name, self.about.id)?;
-        writeln!(f, "Version: {}", self.about.version)?;
-        writeln!(f, "Description: {}", self.about.description)?;
-
-        // AuthorInfoの表示
-        let mut author = format!("{} ({})", self.about.author.name, self.about.author.id);
-        if let Some(email) = &self.about.author.email {
-            author.push_str(&format!(" <{}>", email));
+        if !self.relation.depend.is_empty() {
+            writeln!(f, "\n{}", "Dependencies:".bold())?;
+            for dep in &self.relation.depend {
+                writeln!(f, "  - {} ({})", dep.name.green(), dep.version)?;
+            }
         }
-        if let Some(website) = &self.about.author.website {
-            author.push_str(&format!(" {}", website));
+
+        if !self.relation.conflict.is_empty() {
+            writeln!(f, "\n{}", "Conflicts:".bold())?;
+            for conflict in &self.relation.conflict {
+                writeln!(f, "  - {} ({})", conflict.name.red(), conflict.version)?;
+            }
         }
-        writeln!(f, "Author: {}", author)?;
-        writeln!(f, "Size: {}", self.about.size)?;
-
-        // Install Relationsの表示
-        writeln!(f, "Install Relations:")?;
-        let format_dep = |dep: &Vec<Vec<PkgRange>>| -> String {
-            dep.iter()
-                .map(|group| {
-                    let group_str = group
-                        .iter()
-                        .map(|pkg| format!("{}", pkg))
-                        .collect::<Vec<_>>()
-                        .join(" | ");
-                    if group.len() > 1 {
-                        format!("({})", group_str)
-                    } else {
-                        group_str
-                    }
-                })
-                .collect::<Vec<_>>()
-                .join(", ")
-        };
-        writeln!(
-            f,
-            "  Depends: {}",
-            format_dep(&self.install_relation.depends)
-        )?;
-        writeln!(
-            f,
-            "  Pre-Depends: {}",
-            format_dep(&self.install_relation.pre_depends)
-        )?;
-        writeln!(
-            f,
-            "  Recommends: {}",
-            format_dep(&self.install_relation.recommends)
-        )?;
-        writeln!(
-            f,
-            "  Suggests: {}",
-            format_dep(&self.install_relation.suggests)
-        )?;
-        writeln!(
-            f,
-            "  Extension: {}",
-            self.install_relation
-                .extension
-                .iter()
-                .map(|pkg| format!("{}", pkg))
-                .collect::<Vec<_>>()
-                .join(", ")
-        )?;
-        writeln!(
-            f,
-            "  Breaks: {}",
-            self.install_relation
-                .breaks
-                .iter()
-                .map(|pkg| format!("{}", pkg))
-                .collect::<Vec<_>>()
-                .join(", ")
-        )?;
-        writeln!(
-            f,
-            "  Conflicts: {}",
-            self.install_relation
-                .conflicts
-                .iter()
-                .map(|pkg| format!("{}", pkg))
-                .collect::<Vec<_>>()
-                .join(", ")
-        )?;
-        writeln!(
-            f,
-            "  Replaces: {}",
-            self.install_relation
-                .replaces
-                .iter()
-                .map(|pkg| format!("{}", pkg))
-                .collect::<Vec<_>>()
-                .join(", ")
-        )?;
-
-        // Build Relationsの表示
-        writeln!(f, "Build Relations:")?;
-        writeln!(f, "  Depends: {}", format_dep(&self.build_relation.depends))?;
-
-        // Virtual Packagesの表示
-        writeln!(
-            f,
-            "Virtual Packages: {}",
-            self.virt_pkg
-                .iter()
-                .map(|pkg| format!("{}", pkg))
-                .collect::<Vec<_>>()
-                .join(", ")
-        )?;
 
         Ok(())
     }
 }
+impl Default for PackageData {
+    fn default() -> Self {
+        PackageData {
+            about: AboutData {
+                author: AuthorAboutData {
+                    name: "".to_string(),
+                    email: "".to_string(),
+                },
+                package: PackageAboutData {
+                    name: "".to_string(),
+                    version: Version::default(),
+                },
+            },
+            relation: RelationData {
+                depend: Vec::new(),
+                conflict: Vec::new(),
+            },
+        }
+    }
+}
 
-// テストコード
 #[cfg(test)]
 mod tests {
-    use super::PackageInfo;
-
+    use super::*;
     #[test]
-    fn pkg_test() {
-        let test_pkginfo = PackageInfo::new();
-        println!("{}", test_pkginfo);
+    fn test() {
+        let data = PackageData::default();
+        println!("{}", data);
     }
 }
