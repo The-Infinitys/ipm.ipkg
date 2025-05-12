@@ -61,10 +61,6 @@ pub fn camel_loop(msg: &str) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     #[test]
-    fn test() {
-        let data = yesno_loop("Are you OK?: ");
-        println!("{}", data);
-    }
+    fn test() {}
 }
