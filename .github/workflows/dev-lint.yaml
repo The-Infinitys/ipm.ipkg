@@ -1,0 +1,30 @@
+name: Rust CI
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        profile: default
+        override: true
+
+    - name: Run cargo check
+      run: cargo check --verbose
+
+    - name: Run cargo clippy
+      run: cargo clippy --verbose --all-targets --all-features --no-deps
+      # Consider adding -- -D warnings to treat clippy warnings as errors
+
+    - name: Run cargo fmt check
+      run: cargo fmt --all --check
