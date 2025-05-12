@@ -1,29 +1,29 @@
 // args.rs
+use colored::Colorize;
 use std::env;
 use std::fmt;
-use colored::Colorize;
 
 // 引数の種類を表す列挙型
 #[derive(Debug, Clone)]
 pub enum ArgumentType {
-    Simple,      // プレーンな引数（例: "file.txt"）
-    ShortOpt,    // 短いオプション（例: "-v"）
-    LongOpt,     // 長いオプション（例: "--verbose"）
+    Simple,   // プレーンな引数（例: "file.txt"）
+    ShortOpt, // 短いオプション（例: "-v"）
+    LongOpt,  // 長いオプション（例: "--verbose"）
 }
 
 // 引数の情報を保持する構造体
 #[derive(Debug, Clone)]
 pub struct Argument {
     pub arg_type: ArgumentType,
-    pub arg_str: String,           // 引数の生の文字列（例: "--data"）
-    pub arg_values: Vec<String>,   // 引数の値（例: ["data1", "data2", "data3"]）
+    pub arg_str: String,         // 引数の生の文字列（例: "--data"）
+    pub arg_values: Vec<String>, // 引数の値（例: ["data1", "data2", "data3"]）
 }
 
 // コマンド全体を表す構造体
 #[derive(Debug)]
 pub struct Command {
-    pub cmd_name: String,          // コマンド名（例: "my_program"）
-    pub args: Vec<Argument>,       // 引数のリスト
+    pub cmd_name: String,    // コマンド名（例: "my_program"）
+    pub args: Vec<Argument>, // 引数のリスト
 }
 
 // DisplayトレイトをCommandに実装（カラー化）
@@ -31,7 +31,7 @@ impl fmt::Display for Command {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // コマンド名を青色で表示
         writeln!(f, "{}: {}", "Command".cyan().bold(), self.cmd_name.blue())?;
-        
+
         // 引数がなければその旨を赤色で表示
         if self.args.is_empty() {
             return writeln!(f, "{}", "No arguments provided.".red());
