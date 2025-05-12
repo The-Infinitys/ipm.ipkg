@@ -62,6 +62,5 @@ pub fn camel_loop(msg: &str) -> String {
 #[cfg(test)]
 mod tests {
     #[test]
-    fn test() {
-    }
+    fn test() {}
 }
