@@ -1,8 +1,6 @@
-use std::str::FromStr;
-
-use ipkg::modules::version;
+use ipkg::utils::shell;
 
 fn main() {
-    let test_ver = version::Version::from_str("1.2.3").unwrap();
-    println!("Hello, world!: {}", &test_ver);
+    let command_data = shell::args::init();
+    println!("{}", command_data);
 }
