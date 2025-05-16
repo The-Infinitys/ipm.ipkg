@@ -3,13 +3,13 @@ use regex::Regex;
 use std::io::{Write, stdin, stdout};
 
 /// ユーザーにメッセージを表示し、標準入力から1行の入力を取得します。
-/// 
+///
 /// # 引数
-/// 
+///
 /// * `msg` - ユーザーに表示するメッセージ。
-/// 
+///
 /// # 戻り値
-/// 
+///
 /// * `String` - 標準入力から読み取った入力行。
 fn str_input(msg: &str) -> String {
     print!("{}", msg);
@@ -22,13 +22,13 @@ fn str_input(msg: &str) -> String {
 }
 
 /// はい/いいえの質問を行い、ユーザーの回答を検証します。
-/// 
+///
 /// # 引数
-/// 
+///
 /// * `msg` - ユーザーに尋ねる質問。
-/// 
+///
 /// # 戻り値
-/// 
+///
 /// * `Ok(true)` - "yes" または "y" が入力された場合。
 /// * `Ok(false)` - "no" または "n" が入力された場合。
 /// * `Err(String)` - 無効な回答が入力された場合、エラーメッセージを含む。
@@ -43,13 +43,13 @@ pub fn yesno(msg: &str) -> Result<bool, String> {
 }
 
 /// 有効なはい/いいえの回答が得られるまで質問を繰り返します。
-/// 
+///
 /// # 引数
-/// 
+///
 /// * `msg` - ユーザーに尋ねる質問。
-/// 
+///
 /// # 戻り値
-/// 
+///
 /// * `bool` - "yes" または "y" の場合は true、"no" または "n" の場合は false。
 pub fn yesno_loop(msg: &str) -> bool {
     loop {
@@ -64,14 +64,14 @@ pub fn yesno_loop(msg: &str) -> bool {
 }
 
 /// 指定された正規表現に一致する入力を検証します。
-/// 
+///
 /// # 引数
-/// 
+///
 /// * `msg` - ユーザーに表示するメッセージ。
 /// * `regex` - 入力が一致する必要がある正規表現。
-/// 
+///
 /// # 戻り値
-/// 
+///
 /// * `Ok(String)` - 入力が正規表現に一致する場合。
 /// * `Err(String)` - 入力が一致しない場合、エラーメッセージを含む。
 pub fn regex_string(msg: &str, regex: Regex) -> Result<String, String> {
@@ -83,13 +83,13 @@ pub fn regex_string(msg: &str, regex: Regex) -> Result<String, String> {
 }
 
 /// キャメルケース形式の文字列を検証します（例: helloWorld）。
-/// 
+///
 /// # 引数
-/// 
+///
 /// * `msg` - ユーザーに表示するメッセージ。
-/// 
+///
 /// # 戻り値
-/// 
+///
 /// * `Ok(String)` - 入力が有効なキャメルケースの場合。
 /// * `Err(String)` - 入力が無効な場合、エラーメッセージを含む。
 pub fn camel_case(msg: &str) -> Result<String, String> {
@@ -98,13 +98,13 @@ pub fn camel_case(msg: &str) -> Result<String, String> {
 }
 
 /// 有効なキャメルケース文字列が得られるまで入力を繰り返します。
-/// 
+///
 /// # 引数
-/// 
+///
 /// * `msg` - ユーザーに表示するメッセージ。
-/// 
+///
 /// # 戻り値
-/// 
+///
 /// * `String` - ユーザーが提供した有効なキャメルケース文字列。
 pub fn camel_loop(msg: &str) -> String {
     loop {
@@ -119,13 +119,13 @@ pub fn camel_loop(msg: &str) -> String {
 }
 
 /// パスカルケース形式の文字列を検証します（例: HelloWorld）。
-/// 
+///
 /// # 引数
-/// 
+///
 /// * `msg` - ユーザーに表示するメッセージ。
-/// 
+///
 /// # 戻り値
-/// 
+///
 /// * `Ok(String)` - 入力が有効なパスカルケースの場合。
 /// * `Err(String)` - 入力が無効な場合、エラーメッセージを含む。
 pub fn pascal_case(msg: &str) -> Result<String, String> {
@@ -134,13 +134,13 @@ pub fn pascal_case(msg: &str) -> Result<String, String> {
 }
 
 /// 有効なパスカルケース文字列が得られるまで入力を繰り返します。
-/// 
+///
 /// # 引数
-/// 
+///
 /// * `msg` - ユーザーに表示するメッセージ。
-/// 
+///
 /// # 戻り値
-/// 
+///
 /// * `String` - ユーザーが提供した有効なパスカルケース文字列。
 pub fn pascal_loop(msg: &str) -> String {
     loop {
@@ -155,13 +155,13 @@ pub fn pascal_loop(msg: &str) -> String {
 }
 
 /// スネークケース形式の文字列を検証します（例: hello_world）。
-/// 
+///
 /// # 引数
-/// 
+///
 /// * `msg` - ユーザーに表示するメッセージ。
-/// 
+///
 /// # 戻り値
-/// 
+///
 /// * `Ok(String)` - 入力が有効なスネークケースの場合。
 /// * `Err(String)` - 入力が無効な場合、エラーメッセージを含む。
 pub fn snake_case(msg: &str) -> Result<String, String> {
@@ -170,13 +170,13 @@ pub fn snake_case(msg: &str) -> Result<String, String> {
 }
 
 /// 有効なスネークケース文字列が得られるまで入力を繰り返します。
-/// 
+///
 /// # 引数
-/// 
+///
 /// * `msg` - ユーザーに表示するメッセージ。
-/// 
+///
 /// # 戻り値
-/// 
+///
 /// * `String` - ユーザーが提供した有効なスネークケース文字列。
 pub fn snake_loop(msg: &str) -> String {
     loop {
@@ -191,13 +191,13 @@ pub fn snake_loop(msg: &str) -> String {
 }
 
 /// ケバブケース形式の文字列を検証します（例: hello-world）。
-/// 
+///
 /// # 引数
-/// 
+///
 /// * `msg` - ユーザーに表示するメッセージ。
-/// 
+///
 /// # 戻り値
-/// 
+///
 /// * `Ok(String)` - 入力が有効なケバブケースの場合。
 /// * `Err(String)` - 入力が無効な場合、エラーメッセージを含む。
 pub fn kebab_case(msg: &str) -> Result<String, String> {
@@ -206,13 +206,13 @@ pub fn kebab_case(msg: &str) -> Result<String, String> {
 }
 
 /// 有効なケバブケース文字列が得られるまで入力を繰り返します。
-/// 
+///
 /// # 引数
-/// 
+///
 /// * `msg` - ユーザーに表示するメッセージ。
-/// 
+///
 /// # 戻り値
-/// 
+///
 /// * `String` - ユーザーが提供した有効なケバブケース文字列。
 pub fn kebab_loop(msg: &str) -> String {
     loop {
@@ -227,13 +227,13 @@ pub fn kebab_loop(msg: &str) -> String {
 }
 
 /// SCREAMING_SNAKE_CASE形式の文字列を検証します（例: HELLO_WORLD）。
-/// 
+///
 /// # 引数
-/// 
+///
 /// * `msg` - ユーザーに表示するメッセージ。
-/// 
+///
 /// # 戻り値
-/// 
+///
 /// * `Ok(String)` - 入力が有効なSCREAMING_SNAKE_CASEの場合。
 /// * `Err(String)` - 入力が無効な場合、エラーメッセージを含む。
 pub fn screaming_snake_case(msg: &str) -> Result<String, String> {
@@ -242,13 +242,13 @@ pub fn screaming_snake_case(msg: &str) -> Result<String, String> {
 }
 
 /// 有効なSCREAMING_SNAKE_CASE文字列が得られるまで入力を繰り返します。
-/// 
+///
 /// # 引数
-/// 
+///
 /// * `msg` - ユーザーに表示するメッセージ。
-/// 
+///
 /// # 戻り値
-/// 
+///
 /// * `String` - ユーザーが提供した有効なSCREAMING_SNAKE_CASE文字列。
 pub fn screaming_snake_loop(msg: &str) -> String {
     loop {
