@@ -2,15 +2,12 @@
 ///
 /// リリースビルド時にはコンパイル時に削除され、何も行いません。
 /// 標準ライブラリの `println!` と同様の使い方ができます。
-#[cfg(debug_assertions)] // デバッグビルド時のみ有効
 #[macro_export] // クレート外から利用可能にする
 macro_rules! dprintln {
     // 引数なしのprintln!に相当
-    () => ({
-        println!();
-    });
     // 標準のprintln!と同様に、フォーマット文字列と引数を受け取る
     ($($arg:tt)*) => ({
+        #[cfg(debug_assertions)] // デバッグビルド時のみ有効
         println!($($arg)*);
     });
 }
@@ -27,15 +24,11 @@ macro_rules! dprintln {
 ///
 /// リリースビルド時にはコンパイル時に削除され、何も行いません。
 /// 標準ライブラリの `print!` と同様の使い方ができます。
-#[cfg(debug_assertions)] // デバッグビルド時のみ有効
 #[macro_export] // クレート外から利用可能にする
 macro_rules! dprint {
-    // 引数なしのprint!に相当
-    () => ({
-        print!();
-    });
     // 標準のprint!と同様に、フォーマット文字列と引数を受け取る
     ($($arg:tt)*) => ({
+        #[cfg(debug_assertions)] // デバッグビルド時のみ有効
         print!($($arg)*);
     });
 }
