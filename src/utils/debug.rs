@@ -3,7 +3,7 @@
 /// リリースビルド時にはコンパイル時に削除され、何も行いません。
 /// 標準ライブラリの `println!` と同様の使い方ができます。
 #[cfg(debug_assertions)] // デバッグビルド時のみ有効
-#[macro_export]         // クレート外から利用可能にする
+#[macro_export] // クレート外から利用可能にする
 macro_rules! dprintln {
     // 引数なしのprintln!に相当
     () => ({
@@ -22,13 +22,13 @@ macro_rules! dprintln {
 /// macro_rules! dprintln {
 ///     ($($arg:tt)*) => {}; // 何もしない
 /// }
-/// 
+///
 /// デバッグビルド時のみ、標準出力に改行なしで出力するマクロ。
 ///
 /// リリースビルド時にはコンパイル時に削除され、何も行いません。
 /// 標準ライブラリの `print!` と同様の使い方ができます。
 #[cfg(debug_assertions)] // デバッグビルド時のみ有効
-#[macro_export]         // クレート外から利用可能にする
+#[macro_export] // クレート外から利用可能にする
 macro_rules! dprint {
     // 引数なしのprint!に相当
     () => ({
