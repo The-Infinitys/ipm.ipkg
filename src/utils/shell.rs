@@ -7,7 +7,7 @@ pub enum ExitStatus {
     Success = 0,
     Failure = 1,
     NoArgs = 2,
-    UnknownCommand = 127
+    UnknownCommand = 127,
 }
 
 impl Termination for ExitStatus {
