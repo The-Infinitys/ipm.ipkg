@@ -83,5 +83,4 @@ fn project_create(args: Vec<&Argument>) {
 
 fn init_project_with_params(params: ProjectParams) {
     println!("{}", params);
-    
 }
