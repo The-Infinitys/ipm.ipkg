@@ -1,33 +1,47 @@
-// args.rs
+//! このモジュールはコマンドライン引数をパースし、構造化された形式で表現するための機能を提供します。
+//! シンプルな引数、短いオプション、長いオプション、および連結された短いオプション（例: `-iv`）を扱います。
+
 use colored::Colorize;
 use std::env;
 use std::fmt;
 
-// 引数の種類を表す列挙型
+/// コマンドライン引数の種類を表す列挙型。
 #[derive(Debug, Clone)]
 pub enum ArgumentType {
-    Simple,   // プレーンな引数（例: "file.txt"）
-    ShortOpt, // 短いオプション（例: "-v"）
-    LongOpt,  // 長いオプション（例: "--verbose"）
+    /// プレーンな引数（例: `"file.txt"`）。オプションやフラグではない文字列。
+    Simple,
+    /// 短いオプション（例: `"-v"`）。単一のハイフンとそれに続く文字で構成されます。
+    ShortOpt,
+    /// 長いオプション（例: `"--verbose"`）。二重ハイフンとそれに続く文字列で構成されます。
+    LongOpt,
 }
 
-// 引数の情報を保持する構造体
+/// パースされたコマンドライン引数の情報を保持する構造体。
 #[derive(Debug, Clone)]
 pub struct Argument {
+    /// この引数の種類。
     pub arg_type: ArgumentType,
-    pub arg_str: String,         // 引数の生の文字列（例: "--data", "-v", "-i"）
-    pub arg_values: Vec<String>, // 引数の値（例: ["data1", "data2", "data3"]）。ShortOptの場合は通常空。
+    /// 引数の生の文字列形式。オプションの場合はフラグ自身（例: `"--data"`, `"-v"`, `"-i"`）。
+    pub arg_str: String,
+    /// この引数に関連付けられた値のリスト。
+    /// 例: `--data=data1,data2,data3` の場合、`arg_values` は `["data1", "data2", "data3"]` になります。
+    /// Simple引数やShortOptの場合は通常空です。
+    pub arg_values: Vec<String>,
 }
 
-// コマンド全体を表す構造体
+/// パースされたコマンドライン全体（コマンド名と引数のリスト）を表す構造体。
 #[derive(Debug)]
 pub struct Command {
-    pub cmd_name: String,    // コマンド名（例: "my_program"）
-    pub args: Vec<Argument>, // 引数のリスト
+    /// 実行されたコマンドの名前（通常はプログラム名）。
+    pub cmd_name: String,
+    /// パースされた引数のリスト。
+    pub args: Vec<Argument>,
 }
 
 // DisplayトレイトをCommandに実装（カラー化）
 impl fmt::Display for Command {
+    /// `Command`構造体の内容を、色付けして人間が読める形式でフォーマットします。
+    /// コマンド名、引数の種類、文字列、および関連付けられた値を表示します。
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // コマンド名を青色で表示
         writeln!(f, "{}: {}", "Command".cyan().bold(), self.cmd_name.blue())?;
@@ -66,7 +80,17 @@ impl fmt::Display for Command {
 }
 
 impl Command {
-    // 新しいCommandインスタンスを作成
+    /// 新しい`Command`インスタンスを作成します。
+    ///
+    /// 初期状態では引数リストは空です。
+    ///
+    /// # 引数
+    ///
+    /// * `cmd_name`: コマンドの名前。
+    ///
+    /// # 戻り値
+    ///
+    /// 新しい`Command`インスタンス。
     pub fn new(cmd_name: String) -> Self {
         Command {
             cmd_name,
@@ -74,18 +98,39 @@ impl Command {
         }
     }
 
-    // 引数を追加
+    /// 引数リストに`Argument`を追加します。
+    ///
+    /// # 引数
+    ///
+    /// * `arg`: 追加する`Argument`構造体。
     pub fn add_arg(&mut self, arg: Argument) {
         self.args.push(arg);
     }
 }
 
-// コマンドライン引数を取得
+/// 環境からコマンドライン引数のベクタを取得します。
+///
+/// 最初の要素は通常、実行可能ファイル自身のパスです。
+///
+/// # 戻り値
+///
+/// コマンドライン引数を文字列のベクタとして返します。
 fn get_args() -> Vec<String> {
     env::args().collect()
 }
 
-// 引数の種類を判定
+/// 引数文字列の種類（Simple, ShortOpt, LongOpt）を判定します。
+///
+/// `--` で始まる場合は LongOpt、`-` で始まり長さが2以上の場合は ShortOpt、
+/// それ以外は Simple と判定します。`-` 単体は ShortOpt としません。
+///
+/// # 引数
+///
+/// * `arg`: 判定する引数文字列スライス。
+///
+/// # 戻り値
+///
+/// 引数の種類を示す`ArgumentType`。
 fn determine_arg_type(arg: &str) -> ArgumentType {
     if arg.starts_with("--") {
         ArgumentType::LongOpt
@@ -97,7 +142,15 @@ fn determine_arg_type(arg: &str) -> ArgumentType {
     }
 }
 
-// カンマ区切りの値を分割（例: "data1,data2,data3" -> ["data1", "data2", "data3"]）
+/// カンマ区切りの文字列を分割し、トリムして空でない要素のベクタを返します。
+///
+/// # 引数
+///
+/// * `value`: 分割するカンマ区切りの文字列スライス。
+///
+/// # 戻り値
+///
+/// 分割された値の文字列ベクタ。
 fn parse_values(value: &str) -> Vec<String> {
     value
         .split(',')
@@ -106,13 +159,21 @@ fn parse_values(value: &str) -> Vec<String> {
         .collect()
 }
 
-// 引数を初期化してCommandを返す
+/// 環境からコマンドライン引数を取得し、パースして`Command`構造体として返します。
+///
+/// コマンド名、シンプルな引数、長いオプション（値付き/なし）、および
+/// 連結された短いオプション（例: `-iv` を `-i` と `-v` に分解）を処理します。
+///
+/// # 戻り値
+///
+/// パースされたコマンドを含む`Command`構造体。
 pub fn init() -> Command {
     let args = get_args();
     let mut command = if let Some(cmd_name) = args.first() {
         // 最初の引数はコマンド名（プログラム名）
         Command::new(cmd_name.clone())
     } else {
+        // コマンド名がない場合は空文字列を使用
         Command::new(String::new())
     };
 

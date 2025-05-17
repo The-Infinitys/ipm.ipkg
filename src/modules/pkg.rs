@@ -383,7 +383,7 @@ impl VersionRange {
     /// `version`が範囲内に含まれる場合は`true`、そうでない場合は`false`。
     pub fn compare(&self, version: &Version) -> bool {
         // _range_data が None の場合（つまり "*"）は常に true
-        self._range_data.as_ref().map_or(true, |range_data| {
+        self._range_data.as_ref().is_none_or(|range_data| {
             // 各制約に対して、version がその条件を満たさない場合は false を返す
             if let Some(v) = &range_data.strictly_earlier {
                 if version >= v {
@@ -430,10 +430,9 @@ impl Display for VersionRange {
         // RangeDataのDisplay実装は存在するが、VersionRangeのDisplayはそれを使っていない点に注意。
         // RangeDataのDisplayを使うと、解析された制約（例: "< 2.0, >= 1.0"）を表示できる。
         if self._range_data.is_none() {
-            write!(f, "*")
+            write!(f, "None")
         } else {
-            // FIXME: 具体的なバージョン範囲の表示が不完全な可能性
-            write!(f, "")
+            write!(f, "{}", self._range_data.as_ref().unwrap())
         }
     }
 }
@@ -486,7 +485,7 @@ mod tests {
         println!("version2 >= version1: {}", version1 >= version2);
         println!("version3 < version1: {}", version3 < version1);
         let range1 = VersionRange::from_str("< 2.0, > 1.1.3-build-1").unwrap();
-        println!("Range1: {:?}", &range1);
+        println!("Range1: {}", &range1);
         println!("In Range1, version1: {}", range1.compare(&version1));
     }
 }

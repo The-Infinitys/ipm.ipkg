@@ -378,7 +378,7 @@ impl VersionRange {
     /// `version`が範囲内に含まれる場合は`true`、そうでない場合は`false`。
     pub fn compare(&self, version: &Version) -> bool {
         // _range_data が None の場合（つまり "*"）は常に true
-        self._range_data.as_ref().map_or(true, |range_data| {
+        self._range_data.as_ref().is_none_or(|range_data| {
             // 各制約に対して、version がその条件を満たさない場合は false を返す
             if let Some(v) = &range_data.strictly_earlier {
                 if version >= v { // version >= strictly_earlier_version なら範囲外

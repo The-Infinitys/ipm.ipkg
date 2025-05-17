@@ -134,8 +134,6 @@ fn show_help(help_type: HelpType) {
 }
 
 /// 不明なヘルプタイプが指定された場合にエラーメッセージを表示します。
-///
-/// 現在の実装では使用されていませんが、将来的な拡張のために残されています。
 pub fn unknown() {
     eprintln!("unknown help type");
 }
