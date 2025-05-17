@@ -1,8 +1,7 @@
 //! このモジュールは、アプリケーションのメッセージ（ウェルカムメッセージ、バージョン情報、ヘルプメッセージなど）の表示を扱います。
 //! Cargo.tomlからパッケージ情報を取得し、メッセージテンプレート内のプレースホルダーを置換する機能を提供します。
-
-use crate::utils::shell::args::Argument; // `Argument`構造体が外部モジュールにあることを示しています
-
+use crate::utils::shell;
+use crate::utils::shell::args::{Argument, cmd_str}; // `Argument`構造体が外部モジュールにあることを示しています
 /// Cargo.tomlから取得したパッケージ情報を保持する構造体。
 ///
 /// `CARGO_PKG_NAME`, `CARGO_PKG_VERSION`, `std::env::consts::ARCH` 環境変数から情報を取得します。
@@ -135,5 +134,6 @@ fn show_help(help_type: HelpType) {
 
 /// 不明なヘルプタイプが指定された場合にエラーメッセージを表示します。
 pub fn unknown() {
-    eprintln!("unknown help type");
+    eprintln!("unknown command:\n  {}", cmd_str());
+    shell::exit(shell::ExitStatus::UnknownCommand);
 }

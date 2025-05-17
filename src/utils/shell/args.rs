@@ -229,6 +229,11 @@ pub fn init() -> Command {
     command
 }
 
+/// 実行された際のコマンドを文字列として取得します。
+pub fn cmd_str() -> String {
+    get_args().join(" ")
+}
+
 /*
 // main.rs などで以下のように使用できます
 
