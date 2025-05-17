@@ -71,6 +71,7 @@ fn project_create(args: Vec<&Argument>) {
     match fs::create_dir(&params.project_name) {
         Ok(_) => {
             if let Err(_) = env::set_current_dir(&params.project_name) {
+                eprintln!("Failed to set current dir: {}", &params.project_name);
                 shell::exit(ExitStatus::Failure);
             }
             init_project_with_params(params)
@@ -82,4 +83,5 @@ fn project_create(args: Vec<&Argument>) {
 
 fn init_project_with_params(params: ProjectParams) {
     println!("{}", params);
+    
 }

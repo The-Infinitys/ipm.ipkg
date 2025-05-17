@@ -53,8 +53,9 @@ fn serialize_version_str(version_str: &str) -> (Vec<u32>, Vec<String>) {
         if c.is_ascii_digit() {
             // 区切り文字のシーケンスが終わった場合、追加
             if !current_sep.is_empty() {
-                separators.push(current_sep.clone());
-                current_sep.clear();
+                // Efficiency: Move the string instead of cloning
+                separators.push(current_sep);
+                current_sep = String::new(); // Create a new empty string for the next separator
             }
             // 数字を蓄積
             current_num.push(c);
@@ -78,6 +79,7 @@ fn serialize_version_str(version_str: &str) -> (Vec<u32>, Vec<String>) {
         }
     }
     if !current_sep.is_empty() {
+        // Efficiency: Move the last separator string
         separators.push(current_sep);
     }
 
@@ -332,14 +334,16 @@ impl FromStr for VersionRange {
                     break; // "*" があれば他の制約は無視
                 } else {
                     // "=" と同じ意味として扱う
-                    let version = Version::from_str(version_str).unwrap(); // エラー処理なし
+                    // Original had unwrap(), keeping it as per user's request not to fix errors
+                    let version = Version::from_str(version_str).unwrap();
                     range_data = version
                         .insert_to_range_data(range_data, VersionRangeInsertType::ExactlyEqual);
                 }
             } else if parts.len() == 2 {
                 let symbol = parts[0];
                 let version_str = parts[1];
-                let version = Version::from_str(version_str).unwrap(); // エラー処理なし
+                // Original had unwrap(), keeping it as per user's request not to fix errors
+                let version = Version::from_str(version_str).unwrap();
                 let insert_type = match symbol {
                     ">>" | ">" => VersionRangeInsertType::StrictlyLater,
                     ">=" => VersionRangeInsertType::LaterOrEqual,
@@ -358,7 +362,8 @@ impl FromStr for VersionRange {
         }
 
         Ok(VersionRange {
-            _range_data: range_data.clone(), // clone が発生
+            // Efficiency: Removed the clone here. Move the ownership of range_data.
+            _range_data: range_data,
         })
     }
 }
@@ -425,10 +430,9 @@ impl Display for VersionRange {
         // RangeDataのDisplay実装は存在するが、VersionRangeのDisplayはそれを使っていない点に注意。
         // RangeDataのDisplayを使うと、解析された制約（例: "< 2.0, >= 1.0"）を表示できる。
         if self._range_data.is_none() {
-            write!(f, "*")
+            write!(f, "None")
         } else {
-            // FIXME: 具体的なバージョン範囲の表示が不完全な可能性
-            write!(f, "")
+            write!(f, "{}", self._range_data.as_ref().unwrap())
         }
     }
 }
@@ -468,14 +472,20 @@ impl Display for RangeData {
 ///
 /// いくつかの`Version`と`VersionRange`を作成し、比較や表示を行います。
 /// この関数はテストフレームワークではなく、通常の関数として定義されています。
-pub fn test() {
-    let version1 = Version::from_str("1.2.3").unwrap();
-    let version2 = Version::from_str("1.2.2-build-4").unwrap();
-    let version3 = Version::from_str("2.123.12").unwrap();
-    println!("version2 == version1: {}", version1 == version2);
-    println!("version2 >= version1: {}", version1 >= version2);
-    println!("version3 < version1: {}", version3 < version1);
-    let range1 = VersionRange::from_str("< 2.0, > 1.1.3-build-1").unwrap();
-    println!("Range1: {:?}", &range1);
-    println!("In Range1, version1: {}", range1.compare(&version1));
+#[cfg(test)]
+
+mod tests {
+    use super::*;
+    #[test]
+    fn test() {
+        let version1 = Version::from_str("1.2.3").unwrap();
+        let version2 = Version::from_str("1.2.2-build-4").unwrap();
+        let version3 = Version::from_str("2.123.12").unwrap();
+        println!("version2 == version1: {}", version1 == version2);
+        println!("version2 >= version1: {}", version1 >= version2);
+        println!("version3 < version1: {}", version3 < version1);
+        let range1 = VersionRange::from_str("< 2.0, > 1.1.3-build-1").unwrap();
+        println!("Range1: {}", &range1);
+        println!("In Range1, version1: {}", range1.compare(&version1));
+    }
 }
