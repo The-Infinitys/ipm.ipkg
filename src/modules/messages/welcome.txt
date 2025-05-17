@@ -7,4 +7,3 @@ Usage: {name} command [options]
 それぞれのコマンドについての情報は {name} --help command で参照してください。
 
 The Infinity's
-w
