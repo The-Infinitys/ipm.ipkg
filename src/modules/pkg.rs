@@ -1,32 +1,6 @@
+use super::version::{Version, VersionRange};
 use colored::Colorize;
 use std::fmt::Display;
-
-// 仮の定義。実際のコードではsuper::versionからインポートされます。
-#[derive(Debug, Default, PartialEq)]
-pub struct Version {
-    major: u32,
-    minor: u32,
-    patch: u32,
-}
-
-impl Display for Version {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}.{}.{}", self.major, self.minor, self.patch)
-    }
-}
-
-#[derive(Debug, Default, PartialEq)]
-pub struct VersionRange {
-    // バージョン範囲を表すフィールド（例: >, >=, <, <=, = など）
-    op: String,
-    version: Version,
-}
-
-impl Display for VersionRange {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}{}", self.op, self.version)
-    }
-}
 
 pub struct PackageData {
     pub about: AboutData,
@@ -170,6 +144,8 @@ impl Default for PackageData {
 
 #[cfg(test)]
 mod tests {
+    use std::str::FromStr;
+
     use super::*;
 
     #[test]
@@ -187,100 +163,47 @@ mod tests {
         };
         data.about.package = PackageAboutData {
             name: "my-package".to_string(),
-            version: Version {
-                major: 1,
-                minor: 2,
-                patch: 0,
-            },
+            version: Version::default(),
         };
 
         // Add dependencies
         data.relation.depend.push(vec![DependPackageData {
             name: "dep-a".to_string(),
-            version: VersionRange {
-                op: ">=".to_string(),
-                version: Version {
-                    major: 1,
-                    minor: 0,
-                    patch: 0,
-                },
-            },
+            version: VersionRange::from_str(">= 1.0, < 2.0").unwrap(),
         }]);
         data.relation.depend.push(vec![
             DependPackageData {
                 name: "dep-b".to_string(),
-                version: VersionRange {
-                    op: "".to_string(),
-                    version: Version {
-                        major: 2,
-                        minor: 0,
-                        patch: 0,
-                    },
-                },
+                version: VersionRange::from_str("= 2.0.0").unwrap(),
             },
             DependPackageData {
                 name: "dep-c".to_string(),
-                version: VersionRange {
-                    op: ">".to_string(),
-                    version: Version {
-                        major: 1,
-                        minor: 5,
-                        patch: 0,
-                    },
-                },
+                version: VersionRange::from_str("> 1.5.0").unwrap(),
             },
         ]);
 
         // Add suggests
         data.relation.suggests.push(vec![DependPackageData {
             name: "suggest-x".to_string(),
-            version: VersionRange {
-                op: "".to_string(),
-                version: Version {
-                    major: 3,
-                    minor: 0,
-                    patch: 0,
-                },
-            },
+            version: VersionRange::from_str(" = 3.0").unwrap(),
         }]);
 
         // Add recommends
         data.relation.recommends.push(vec![
             DependPackageData {
                 name: "rec-y".to_string(),
-                version: VersionRange {
-                    op: "<".to_string(),
-                    version: Version {
-                        major: 4,
-                        minor: 0,
-                        patch: 0,
-                    },
-                },
+                version: VersionRange::from_str("< 4.0.0").unwrap(),
             },
             DependPackageData {
                 name: "rec-z".to_string(),
-                version: VersionRange {
-                    op: "".to_string(),
-                    version: Version {
-                        major: 4,
-                        minor: 1,
-                        patch: 0,
-                    },
-                },
+                version: VersionRange::from_str("= 4.1.0").unwrap(),
             },
         ]);
 
         // Add conflicts
         data.relation.conflict.push(DependPackageData {
             name: "old-package".to_string(),
-            version: VersionRange {
-                op: "<=".to_string(),
-                version: Version {
-                    major: 0,
-                    minor: 9,
-                    patch: 0,
-                },
-            },
+            version: VersionRange::from_str("0.9.0").unwrap(),
         });
 
         println!("{}", data);

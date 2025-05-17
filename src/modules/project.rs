@@ -70,7 +70,7 @@ fn project_create(args: Vec<&Argument>) {
     }
     match fs::create_dir(&params.project_name) {
         Ok(_) => {
-            if let Err(_) = env::set_current_dir(&params.project_name) {
+            if env::set_current_dir(&params.project_name).is_err() {
                 eprintln!("Failed to set current dir: {}", &params.project_name);
                 shell::exit(ExitStatus::Failure);
             }
