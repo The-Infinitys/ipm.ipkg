@@ -354,7 +354,7 @@ impl FromStr for VersionRange {
             } else {
                 return Err(format!("Invalid range format: {}", part));
             }
-             // 挿入の結果、範囲が無効になった場合のチェックが不足している可能性
+            // 挿入の結果、範囲が無効になった場合のチェックが不足している可能性
         }
 
         Ok(VersionRange {
@@ -381,27 +381,32 @@ impl VersionRange {
         self._range_data.as_ref().is_none_or(|range_data| {
             // 各制約に対して、version がその条件を満たさない場合は false を返す
             if let Some(v) = &range_data.strictly_earlier {
-                if version >= v { // version >= strictly_earlier_version なら範囲外
+                if version >= v {
+                    // version >= strictly_earlier_version なら範囲外
                     return false;
                 }
             }
             if let Some(v) = &range_data.earlier_or_equal {
-                if version > v { // version > earlier_or_equal_version なら範囲外
+                if version > v {
+                    // version > earlier_or_equal_version なら範囲外
                     return false;
                 }
             }
             if let Some(v) = &range_data.exactly_equal {
-                if version != v { // version != exactly_equal_version なら範囲外
+                if version != v {
+                    // version != exactly_equal_version なら範囲外
                     return false;
                 }
             }
             if let Some(v) = &range_data.later_or_equal {
-                if version < v { // version < later_or_equal_version なら範囲外
+                if version < v {
+                    // version < later_or_equal_version なら範囲外
                     return false;
                 }
             }
             if let Some(v) = &range_data.strictly_later {
-                if version <= v { // version <= strictly_later_version なら範囲外
+                if version <= v {
+                    // version <= strictly_later_version なら範囲外
                     return false;
                 }
             }
