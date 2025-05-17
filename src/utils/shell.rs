@@ -6,10 +6,11 @@ pub mod question;
 pub enum ExitStatus {
     Success = 0,
     Failure = 1,
+    NoArgs = 2,
 }
 
 impl Termination for ExitStatus {
     fn report(self) -> std::process::ExitCode {
-        return ExitCode::from(self as u8);
+        ExitCode::from(self as u8)
     }
 }
