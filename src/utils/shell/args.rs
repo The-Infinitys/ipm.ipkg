@@ -89,8 +89,9 @@ fn get_args() -> Vec<String> {
 fn determine_arg_type(arg: &str) -> ArgumentType {
     if arg.starts_with("--") {
         ArgumentType::LongOpt
-    } else if arg.starts_with("-") && arg.len() > 1 { // '-' だけは ShortOpt としない
-         ArgumentType::ShortOpt
+    } else if arg.starts_with("-") && arg.len() > 1 {
+        // '-' だけは ShortOpt としない
+        ArgumentType::ShortOpt
     } else {
         ArgumentType::Simple
     }
@@ -124,7 +125,7 @@ pub fn init() -> Command {
         if let ArgumentType::LongOpt = arg_type {
             if let Some((key, value)) = arg_str.split_once('=') {
                 let arg_values = parse_values(value);
-                 command.add_arg(Argument {
+                command.add_arg(Argument {
                     arg_type,
                     arg_str: key.to_string(), // キー部分だけをarg_strとして保存
                     arg_values,
@@ -136,19 +137,21 @@ pub fn init() -> Command {
 
         // 短いオプションが複数連なっている場合（例: "-iv"）
         if let ArgumentType::ShortOpt = arg_type {
-             if arg_str.len() > 2 { // 長さが2より大きい場合（例: "-iv" は長さ3）
-                 // '-' に続く各文字を個別の短いオプションとして追加
-                 for c in arg_str.chars().skip(1) { // 最初の '-' をスキップ
-                     let short_opt_str = format!("-{}", c);
-                     command.add_arg(Argument {
-                         arg_type: ArgumentType::ShortOpt,
-                         arg_str: short_opt_str,
-                         arg_values: Vec::new(), // 連結された短いオプションは通常値を持たない
-                     });
-                 }
-                 i += 1; // この引数は処理済み
-                 continue; // 次の引数へ
-             }
+            if arg_str.len() > 2 {
+                // 長さが2より大きい場合（例: "-iv" は長さ3）
+                // '-' に続く各文字を個別の短いオプションとして追加
+                for c in arg_str.chars().skip(1) {
+                    // 最初の '-' をスキップ
+                    let short_opt_str = format!("-{}", c);
+                    command.add_arg(Argument {
+                        arg_type: ArgumentType::ShortOpt,
+                        arg_str: short_opt_str,
+                        arg_values: Vec::new(), // 連結された短いオプションは通常値を持たない
+                    });
+                }
+                i += 1; // この引数は処理済み
+                continue; // 次の引数へ
+            }
         }
 
         // 上記のどのパターンにも当てはまらない場合（シンプルな引数、単一の短いオプション "-v", 値のない長いオプション "--help"）
