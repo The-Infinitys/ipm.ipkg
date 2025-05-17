@@ -1,0 +1,8 @@
+{name} {version} ({architecture})
+
+Usage: {name} install [options] file-path
+
+{name}パッケージをインストールします。
+
+Options:
+  -f | --force - パッケージを強制的にインストールします
