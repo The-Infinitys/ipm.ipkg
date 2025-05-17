@@ -15,8 +15,8 @@ pub enum ArgumentType {
 #[derive(Debug, Clone)]
 pub struct Argument {
     pub arg_type: ArgumentType,
-    pub arg_str: String,         // 引数の生の文字列（例: "--data"）
-    pub arg_values: Vec<String>, // 引数の値（例: ["data1", "data2", "data3"]）
+    pub arg_str: String,         // 引数の生の文字列（例: "--data", "-v", "-i"）
+    pub arg_values: Vec<String>, // 引数の値（例: ["data1", "data2", "data3"]）。ShortOptの場合は通常空。
 }
 
 // コマンド全体を表す構造体
@@ -89,8 +89,8 @@ fn get_args() -> Vec<String> {
 fn determine_arg_type(arg: &str) -> ArgumentType {
     if arg.starts_with("--") {
         ArgumentType::LongOpt
-    } else if arg.starts_with("-") {
-        ArgumentType::ShortOpt
+    } else if arg.starts_with("-") && arg.len() > 1 { // '-' だけは ShortOpt としない
+         ArgumentType::ShortOpt
     } else {
         ArgumentType::Simple
     }
@@ -115,33 +115,75 @@ pub fn init() -> Command {
         Command::new(String::new())
     };
 
-    // コマンド名を除く引数を処理
-    for arg in args.iter().skip(1) {
-        let arg_type = determine_arg_type(arg);
-        let mut arg_values = Vec::new();
+    let mut i = 1; // コマンド名を除く最初の引数から開始
+    while i < args.len() {
+        let arg_str = &args[i];
+        let arg_type = determine_arg_type(arg_str);
 
         // 長いオプションで値が付いている場合（例: "--data=data1,data2,data3"）
         if let ArgumentType::LongOpt = arg_type {
-            if let Some((key, value)) = arg.split_once('=') {
-                // カンマ区切りの値をパース
-                arg_values = parse_values(value);
-                // キー部分だけをarg_strとして保存
-                command.add_arg(Argument {
+            if let Some((key, value)) = arg_str.split_once('=') {
+                let arg_values = parse_values(value);
+                 command.add_arg(Argument {
                     arg_type,
-                    arg_str: key.to_string(),
+                    arg_str: key.to_string(), // キー部分だけをarg_strとして保存
                     arg_values,
                 });
-                continue;
+                i += 1; // この引数は処理済み
+                continue; // 次の引数へ
             }
         }
 
-        // 値がない場合やシンプルな引数、短いオプション
+        // 短いオプションが複数連なっている場合（例: "-iv"）
+        if let ArgumentType::ShortOpt = arg_type {
+             if arg_str.len() > 2 { // 長さが2より大きい場合（例: "-iv" は長さ3）
+                 // '-' に続く各文字を個別の短いオプションとして追加
+                 for c in arg_str.chars().skip(1) { // 最初の '-' をスキップ
+                     let short_opt_str = format!("-{}", c);
+                     command.add_arg(Argument {
+                         arg_type: ArgumentType::ShortOpt,
+                         arg_str: short_opt_str,
+                         arg_values: Vec::new(), // 連結された短いオプションは通常値を持たない
+                     });
+                 }
+                 i += 1; // この引数は処理済み
+                 continue; // 次の引数へ
+             }
+        }
+
+        // 上記のどのパターンにも当てはまらない場合（シンプルな引数、単一の短いオプション "-v", 値のない長いオプション "--help"）
+        // これらは単一のArgumentとして追加
+        let arg_values = Vec::new(); // これらのケースでは値のパースは行わない
         command.add_arg(Argument {
             arg_type,
-            arg_str: arg.to_string(),
+            arg_str: arg_str.to_string(),
             arg_values,
         });
+        i += 1; // この引数は処理済み
     }
 
     command
 }
+
+/*
+// main.rs などで以下のように使用できます
+
+mod args;
+
+fn main() {
+    let command = args::init();
+    println!("{}", command);
+}
+
+// 実行例:
+// cargo run -- -iv file.txt --data=a,b --verbose
+//
+// 出力例:
+// Command: target/debug/your_program_name
+// Arguments:
+//   1. -i (Type: Short Option): Values: None
+//   2. -v (Type: Short Option): Values: None
+//   3. file.txt (Type: Simple): Values: None
+//   4. --data (Type: Long Option): Values: [a, b]
+//   5. --verbose (Type: Long Option): Values: None
+*/

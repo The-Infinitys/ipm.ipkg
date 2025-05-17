@@ -24,8 +24,16 @@ fn main() -> Result<(), ExitStatus> {
             "--version" => SubCommand::Version,
             _ => SubCommand::Unknown,
         },
-        ArgumentType::ShortOpt => SubCommand::Unknown,
-        ArgumentType::Simple => SubCommand::Unknown,
+        ArgumentType::ShortOpt => match arg_str {
+            "-h" => SubCommand::Help,
+            "-v" => SubCommand::Version,
+            _ => SubCommand::Unknown,
+        },
+        ArgumentType::Simple => match arg_str {
+            "help" => SubCommand::Help,
+            "version" => SubCommand::Version,
+            _ => SubCommand::Unknown,
+        },
     };
     match sub_command {
         SubCommand::Help => messages::help(sub_args),

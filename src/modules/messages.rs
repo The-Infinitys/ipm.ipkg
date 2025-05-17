@@ -34,7 +34,10 @@ pub fn welcome() {
 
 pub fn version() {
     let cargo_package = get_info();
-    println!("{} {}", cargo_package.name, cargo_package.version);
+    println!(
+        "{} {} ({})",
+        cargo_package.name, cargo_package.version, cargo_package.architecture
+    );
 }
 
 pub fn help(args: Vec<&Argument>) {
