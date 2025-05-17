@@ -28,7 +28,6 @@ impl Display for VersionRange {
     }
 }
 
-
 pub struct PackageData {
     pub about: AboutData,
     pub relation: RelationData,
@@ -102,7 +101,7 @@ impl Display for PackageData {
         if !self.relation.suggests.is_empty() {
             writeln!(f, "\n{}", "Suggests:".bold())?;
             for group in &self.relation.suggests {
-                 if group.len() == 1 {
+                if group.len() == 1 {
                     let dep = &group[0];
                     writeln!(f, "  - {} ({})", dep.name.yellow(), dep.version)?;
                 } else {
@@ -111,7 +110,7 @@ impl Display for PackageData {
                         .map(|d| format!("{} ({})", d.name, d.version))
                         .collect();
                     let alts_str = alts.join(" | ");
-                     writeln!(f, "  - ({})", alts_str.yellow())?;
+                    writeln!(f, "  - ({})", alts_str.yellow())?;
                 }
             }
         }
@@ -120,7 +119,7 @@ impl Display for PackageData {
         if !self.relation.recommends.is_empty() {
             writeln!(f, "\n{}", "Recommends:".bold())?;
             for group in &self.relation.recommends {
-                 if group.len() == 1 {
+                if group.len() == 1 {
                     let dep = &group[0];
                     writeln!(f, "  - {} ({})", dep.name.blue(), dep.version)?;
                 } else {
@@ -129,11 +128,10 @@ impl Display for PackageData {
                         .map(|d| format!("{} ({})", d.name, d.version))
                         .collect();
                     let alts_str = alts.join(" | ");
-                     writeln!(f, "  - ({})", alts_str.blue())?;
+                    writeln!(f, "  - ({})", alts_str.blue())?;
                 }
             }
         }
-
 
         // 競合パッケージの表示 (既存部分)
         if !self.relation.conflict.is_empty() {
@@ -189,48 +187,100 @@ mod tests {
         };
         data.about.package = PackageAboutData {
             name: "my-package".to_string(),
-            version: Version { major: 1, minor: 2, patch: 0 },
+            version: Version {
+                major: 1,
+                minor: 2,
+                patch: 0,
+            },
         };
 
         // Add dependencies
         data.relation.depend.push(vec![DependPackageData {
             name: "dep-a".to_string(),
-            version: VersionRange { op: ">=".to_string(), version: Version { major: 1, minor: 0, patch: 0 } },
+            version: VersionRange {
+                op: ">=".to_string(),
+                version: Version {
+                    major: 1,
+                    minor: 0,
+                    patch: 0,
+                },
+            },
         }]);
         data.relation.depend.push(vec![
             DependPackageData {
                 name: "dep-b".to_string(),
-                version: VersionRange { op: "".to_string(), version: Version { major: 2, minor: 0, patch: 0 } },
+                version: VersionRange {
+                    op: "".to_string(),
+                    version: Version {
+                        major: 2,
+                        minor: 0,
+                        patch: 0,
+                    },
+                },
             },
             DependPackageData {
                 name: "dep-c".to_string(),
-                version: VersionRange { op: ">".to_string(), version: Version { major: 1, minor: 5, patch: 0 } },
+                version: VersionRange {
+                    op: ">".to_string(),
+                    version: Version {
+                        major: 1,
+                        minor: 5,
+                        patch: 0,
+                    },
+                },
             },
         ]);
 
         // Add suggests
         data.relation.suggests.push(vec![DependPackageData {
             name: "suggest-x".to_string(),
-            version: VersionRange { op: "".to_string(), version: Version { major: 3, minor: 0, patch: 0 } },
+            version: VersionRange {
+                op: "".to_string(),
+                version: Version {
+                    major: 3,
+                    minor: 0,
+                    patch: 0,
+                },
+            },
         }]);
 
         // Add recommends
         data.relation.recommends.push(vec![
-             DependPackageData {
+            DependPackageData {
                 name: "rec-y".to_string(),
-                version: VersionRange { op: "<".to_string(), version: Version { major: 4, minor: 0, patch: 0 } },
+                version: VersionRange {
+                    op: "<".to_string(),
+                    version: Version {
+                        major: 4,
+                        minor: 0,
+                        patch: 0,
+                    },
+                },
             },
-             DependPackageData {
+            DependPackageData {
                 name: "rec-z".to_string(),
-                version: VersionRange { op: "".to_string(), version: Version { major: 4, minor: 1, patch: 0 } },
+                version: VersionRange {
+                    op: "".to_string(),
+                    version: Version {
+                        major: 4,
+                        minor: 1,
+                        patch: 0,
+                    },
+                },
             },
         ]);
-
 
         // Add conflicts
         data.relation.conflict.push(DependPackageData {
             name: "old-package".to_string(),
-            version: VersionRange { op: "<=".to_string(), version: Version { major: 0, minor: 9, patch: 0 } },
+            version: VersionRange {
+                op: "<=".to_string(),
+                version: Version {
+                    major: 0,
+                    minor: 9,
+                    patch: 0,
+                },
+            },
         });
 
         println!("{}", data);
