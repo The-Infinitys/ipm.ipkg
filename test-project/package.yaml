@@ -1,0 +1,7 @@
+about:
+  author:
+    name: the-infinitys
+    email: the.infinity.s.infinity@gmail.com
+  package:
+    name: test-project
+    version: 1.0.0
