@@ -35,7 +35,10 @@ pub fn create(params: &ProjectParams) -> Result<(), ProjectCreationError> {
     match params.project_template {
         ProjectTemplateType::Default => match templates::default() {
             Ok(()) => Ok(()),
-            Err(e) => Err(ProjectCreationError::IoError(e)),
+            Err(e) => {
+                eprintln!("Error: {}", e);
+                Err(ProjectCreationError::IoError(e))
+            }
         },
     }
 }
