@@ -1,36 +1,37 @@
+use cmd_arg::cmd_arg::{Option, OptionType};
+use cmd_arg::cmd_arg::get as get_cmd_data;
 use ipkg::dprintln;
 use ipkg::modules::{messages, project};
-use ipkg::utils::shell::args::{Argument, ArgumentType};
 use ipkg::utils::shell::{self, ExitStatus};
 fn main() {
-    let command_data = shell::args::init();
+    let command_data = get_cmd_data();
     dprintln!("{}", command_data);
-    let args = command_data.args;
-    if args.is_empty() {
+    let opts = command_data.opts;
+    if opts.is_empty() {
         messages::welcome();
         shell::exit(ExitStatus::NoArgs);
     }
-    let command = &args[0];
-    let sub_args: Vec<&Argument> = args[1..].iter().collect();
+    let command = &opts[0];
+    let sub_opts: Vec<&Option> = opts[1..].iter().collect();
     enum SubCommand {
         Help,
         Version,
         Project,
         Unknown,
     }
-    let arg_str = command.arg_str.as_str();
-    let sub_command: SubCommand = match &command.arg_type {
-        ArgumentType::LongOpt => match arg_str {
+    let opt_str = command.opt_str.as_str();
+    let sub_command: SubCommand = match &command.opt_type {
+        OptionType::LongOpt => match opt_str {
             "--help" => SubCommand::Help,
             "--version" => SubCommand::Version,
             _ => SubCommand::Unknown,
         },
-        ArgumentType::ShortOpt => match arg_str {
+        OptionType::ShortOpt => match opt_str {
             "-h" => SubCommand::Help,
             "-v" => SubCommand::Version,
             _ => SubCommand::Unknown,
         },
-        ArgumentType::Simple => match arg_str {
+        OptionType::Simple => match opt_str {
             "help" => SubCommand::Help,
             "version" => SubCommand::Version,
             "project" => SubCommand::Project,
@@ -38,9 +39,9 @@ fn main() {
         },
     };
     match sub_command {
-        SubCommand::Help => messages::help(sub_args),
+        SubCommand::Help => messages::help(sub_opts),
         SubCommand::Version => messages::version(),
-        SubCommand::Project => project::project(sub_args),
+        SubCommand::Project => project::project(sub_opts),
         SubCommand::Unknown => messages::unknown(),
     }
 }

@@ -1,4 +1,5 @@
-use crate::utils::shell::{self, ExitStatus, args::Argument, question};
+use crate::utils::shell::{self, ExitStatus, question};
+use cmd_arg::cmd_arg::{Option};
 use std::fmt::{Display, Formatter, Result};
 use std::{env, fs};
 mod create;
@@ -24,14 +25,14 @@ impl Display for ProjectParams {
     }
 }
 
-pub fn project(args: Vec<&Argument>) {
+pub fn project(args: Vec<&Option>) {
     if args.is_empty() {
         messages::unknown();
         return;
     }
     let sub_cmd = args.first().unwrap();
-    let sub_args: Vec<&Argument> = args[1..].to_vec();
-    match sub_cmd.arg_str.as_str() {
+    let sub_args: Vec<&Option> = args[1..].to_vec();
+    match sub_cmd.opt_str.as_str() {
         "create" | "new" => project_create(sub_args),
         "info" | "metadata" => project_metadata(),
         _ => messages::unknown(),
@@ -46,7 +47,7 @@ fn project_metadata() {
     shell::exit(ExitStatus::Success);
 }
 
-fn project_create(args: Vec<&Argument>) {
+fn project_create(args: Vec<&Option>) {
     let mut params = ProjectParams {
         project_name: String::new(),
         project_template: ProjectTemplateType::Default,
@@ -56,28 +57,28 @@ fn project_create(args: Vec<&Argument>) {
         },
     };
     for arg in args {
-        match arg.arg_str.as_str() {
+        match arg.opt_str.as_str() {
             "--project-name" => {
-                if arg.arg_values.len() == 1 {
-                    params.project_name = arg.arg_values.first().unwrap().to_owned();
+                if arg.opt_values.len() == 1 {
+                    params.project_name = arg.opt_values.first().unwrap().to_owned();
                 }
             }
             "--template" => {
-                if arg.arg_values.len() == 1 {
-                    match arg.arg_values.first().unwrap().as_str() {
+                if arg.opt_values.len() == 1 {
+                    match arg.opt_values.first().unwrap().as_str() {
                         "default" => params.project_template = ProjectTemplateType::Default,
                         _ => messages::unknown(),
                     }
                 }
             }
             "--author-name" => {
-                if arg.arg_values.len() == 1 {
-                    params.author.name = arg.arg_values.first().unwrap().to_owned();
+                if arg.opt_values.len() == 1 {
+                    params.author.name = arg.opt_values.first().unwrap().to_owned();
                 }
             }
             "--author-email" => {
-                if arg.arg_values.len() == 1 {
-                    params.author.email = arg.arg_values.first().unwrap().to_owned();
+                if arg.opt_values.len() == 1 {
+                    params.author.email = arg.opt_values.first().unwrap().to_owned();
                 }
             }
             _ => messages::unknown(),

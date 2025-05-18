@@ -12,10 +12,9 @@ dependencies = [
 ]
 
 [[package]]
-name = "cmd-arg"
+name = "cmd_arg"
 version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "13b79d4173cc64df1712dab1468483fa8fc7247ea3a671a5cd8d68d2137c181d"
+source = "git+https://github.com/The-Infinitys/rust.cmd-args.git?branch=main#d6e07b71d126a76e4f6387877946c155de6be28d"
 dependencies = [
  "colored",
 ]
@@ -55,7 +54,7 @@ dependencies = [
 name = "ipkg"
 version = "0.1.0"
 dependencies = [
- "cmd-arg",
+ "cmd_arg",
  "colored",
  "regex",
  "serde",

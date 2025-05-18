@@ -83,12 +83,12 @@ pub fn version() {
 /// # 引数
 ///
 /// * `args`: ヘルプメッセージの種類を決定するために使用される引数のベクタ。
-///           現在の実装では、最初の引数のみが `install` かどうかの判定に使用されます。
+///   現在の実装では、最初の引数のみが `install` かどうかの判定に使用されます。
 pub fn help(args: Vec<&Option>) {
     let help_type: HelpType = if args.is_empty() {
         HelpType::General
     } else {
-        match args[0].arg_str.as_str() {
+        match args[0].opt_str.as_str() {
             "install" => HelpType::Install,
             _ => HelpType::General,
         }
