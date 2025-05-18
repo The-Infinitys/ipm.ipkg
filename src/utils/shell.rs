@@ -1,6 +1,4 @@
 use std::process::{ExitCode, Termination};
-
-pub mod args;
 pub mod question;
 #[derive(Debug)]
 pub enum ExitStatus {

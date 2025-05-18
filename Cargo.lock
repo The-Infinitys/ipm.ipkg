@@ -12,6 +12,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "cmd-arg"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "13b79d4173cc64df1712dab1468483fa8fc7247ea3a671a5cd8d68d2137c181d"
+dependencies = [
+ "colored",
+]
+
+[[package]]
 name = "colored"
 version = "3.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -46,6 +55,7 @@ dependencies = [
 name = "ipkg"
 version = "0.1.0"
 dependencies = [
+ "cmd-arg",
  "colored",
  "regex",
  "serde",

@@ -1,7 +1,0 @@
-about:
-  author:
-    name: the-infinitys
-    email: test@example.com
-  package:
-    name: test
-    version: 1.0.0

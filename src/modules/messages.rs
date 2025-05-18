@@ -1,7 +1,7 @@
 //! このモジュールは、アプリケーションのメッセージ（ウェルカムメッセージ、バージョン情報、ヘルプメッセージなど）の表示を扱います。
 //! Cargo.tomlからパッケージ情報を取得し、メッセージテンプレート内のプレースホルダーを置換する機能を提供します。
 use crate::utils::shell;
-use crate::utils::shell::args::{Argument, cmd_str}; // `Argument`構造体が外部モジュールにあることを示しています
+use cmd_arg::cmd_arg::{Option, cmd_str}; // `Option`構造体が外部モジュールにあることを示しています
 /// Cargo.tomlから取得したパッケージ情報を保持する構造体。
 ///
 /// `CARGO_PKG_NAME`, `CARGO_PKG_VERSION`, `std::env::consts::ARCH` 環境変数から情報を取得します。
@@ -84,7 +84,7 @@ pub fn version() {
 ///
 /// * `args`: ヘルプメッセージの種類を決定するために使用される引数のベクタ。
 ///           現在の実装では、最初の引数のみが `install` かどうかの判定に使用されます。
-pub fn help(args: Vec<&Argument>) {
+pub fn help(args: Vec<&Option>) {
     let help_type: HelpType = if args.is_empty() {
         HelpType::General
     } else {

@@ -1,1 +1,0 @@
-templates/default/src/main.sh
