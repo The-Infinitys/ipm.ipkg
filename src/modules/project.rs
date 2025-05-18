@@ -1,7 +1,7 @@
 use crate::utils::shell::{self, ExitStatus, args::Argument, question};
 use std::fmt::{Display, Formatter, Result};
 use std::{env, fs};
-
+mod create;
 use super::messages;
 
 #[derive(PartialEq, Eq)]
@@ -36,10 +36,6 @@ pub fn project(args: Vec<&Argument>) {
 }
 
 fn project_create(args: Vec<&Argument>) {
-    if args.is_empty() {
-        messages::unknown();
-        return;
-    }
     let mut params = ProjectParams {
         project_name: String::new(),
         project_template: ProjectTemplateType::Default,
@@ -74,13 +70,9 @@ fn project_create(args: Vec<&Argument>) {
                 eprintln!("Failed to set current dir: {}", &params.project_name);
                 shell::exit(ExitStatus::Failure);
             }
-            init_project_with_params(params)
+            create::create(params);
         }
         Err(_) => shell::exit(ExitStatus::Failure),
     }
     shell::exit(ExitStatus::Success);
-}
-
-fn init_project_with_params(params: ProjectParams) {
-    println!("{}", params);
 }
