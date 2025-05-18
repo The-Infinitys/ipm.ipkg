@@ -1,7 +1,6 @@
 use std::io;
-use thiserror::Error; // エラー型定義を簡単にするクレート (Cargo.toml に [dependencies] thiserror = "1.0" を追加)
-// あるいは手動で std::fmt::Display と std::error::Error を実装しても良い
-
+use thiserror::Error;
+mod templates;
 use super::super::pkg::PackageData;
 use super::{ProjectParams, ProjectTemplateType};
 use crate::utils::files::{dir_creation, file_creation};
@@ -34,13 +33,9 @@ pub fn create(params: &ProjectParams) -> Result<(), ProjectCreationError> {
     file_creation(project_data_filename, &data)?;
     dir_creation("scripts")?;
     match params.project_template {
-        ProjectTemplateType::Default => {
-            // 必要に応じて、ここでデフォルトテンプレート用のディレクトリ作成などを呼び出す
-            // 例えば、 src ディレクトリを作成する場合:
-            // dir_creation("src")?; // dir_creation のエラーも自動変換される
-        }
+        ProjectTemplateType::Default => match templates::default() {
+            Ok(()) => Ok(()),
+            Err(e) => Err(ProjectCreationError::IoError(e)),
+        },
     }
-
-    // 成功した場合に Ok(()) を返します
-    Ok(())
 }
