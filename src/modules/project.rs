@@ -3,7 +3,6 @@ use std::fmt::{Display, Formatter, Result};
 use std::{env, fs};
 mod create;
 use super::messages;
-
 #[derive(PartialEq, Eq)]
 enum ProjectTemplateType {
     Default,
@@ -67,12 +66,19 @@ fn project_create(args: Vec<&Argument>) {
     match fs::create_dir(&params.project_name) {
         Ok(_) => {
             if env::set_current_dir(&params.project_name).is_err() {
-                eprintln!("Failed to set current dir: {}", &params.project_name);
+                eprintln!("Error: failed to set current dir: {}", &params.project_name);
                 shell::exit(ExitStatus::Failure);
             }
             create::create(params);
         }
-        Err(_) => shell::exit(ExitStatus::Failure),
+        Err(err) => {
+            eprintln!(
+                "Error: failed to create dir: {}\nBecause of: {}",
+                &params.project_name,
+                err.kind()
+            );
+            shell::exit(ExitStatus::Failure);
+        }
     }
     shell::exit(ExitStatus::Success);
 }
