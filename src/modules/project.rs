@@ -2,6 +2,7 @@ use crate::utils::shell::{self, ExitStatus, args::Argument, question};
 use std::fmt::{Display, Formatter, Result};
 use std::{env, fs};
 mod create;
+mod metadata;
 use super::messages;
 use super::pkg::AuthorAboutData;
 #[derive(PartialEq, Eq)]
@@ -32,8 +33,17 @@ pub fn project(args: Vec<&Argument>) {
     let sub_args: Vec<&Argument> = args[1..].to_vec();
     match sub_cmd.arg_str.as_str() {
         "create" | "new" => project_create(sub_args),
+        "info" | "metadata" => project_metadata(),
         _ => messages::unknown(),
     }
+}
+
+fn project_metadata() {
+    if metadata::metadata().is_err() {
+        eprintln!("Error: failed to get metadata");
+        shell::exit(ExitStatus::Failure);
+    }
+    shell::exit(ExitStatus::Success);
 }
 
 fn project_create(args: Vec<&Argument>) {

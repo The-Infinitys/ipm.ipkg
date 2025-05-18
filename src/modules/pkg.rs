@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(default)]
 pub struct PackageData {
     pub about: AboutData,
     #[serde(skip_serializing_if = "RelationData::is_empty")]
@@ -11,24 +12,28 @@ pub struct PackageData {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(default)]
 pub struct AboutData {
     pub author: AuthorAboutData,
     pub package: PackageAboutData,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(default)]
 pub struct AuthorAboutData {
     pub name: String,
     pub email: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(default)]
 pub struct PackageAboutData {
     pub name: String,
     pub version: Version,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(default)]
 pub struct RelationData {
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub depend: Vec<Vec<DependPackageData>>, // 依存関係のグループ（代替は内側のVecで表現）
@@ -41,6 +46,7 @@ pub struct RelationData {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(default)]
 pub struct DependPackageData {
     pub name: String,
     pub version: VersionRange,
@@ -161,6 +167,53 @@ impl RelationData {
             && self.suggests.is_empty()
             && self.recommends.is_empty()
             && self.conflict.is_empty()
+    }
+}
+
+impl Default for AuthorAboutData {
+    fn default() -> Self {
+        AuthorAboutData {
+            name: "default".to_string(),
+            email: "default@default.com".to_string(),
+        }
+    }
+}
+
+impl Default for PackageAboutData {
+    fn default() -> Self {
+        PackageAboutData {
+            name: "default-package".to_string(),
+            version: Version::default(),
+        }
+    }
+}
+
+impl Default for DependPackageData {
+    fn default() -> Self {
+        DependPackageData {
+            name: "default-dependency".to_string(),
+            version: VersionRange::default(),
+        }
+    }
+}
+
+impl Default for AboutData {
+    fn default() -> Self {
+        AboutData {
+            author: AuthorAboutData::default(),
+            package: PackageAboutData::default(),
+        }
+    }
+}
+
+impl Default for RelationData {
+    fn default() -> Self {
+        RelationData {
+            depend: Vec::new(),
+            suggests: Vec::new(),
+            recommends: Vec::new(),
+            conflict: Vec::new(),
+        }
     }
 }
 
