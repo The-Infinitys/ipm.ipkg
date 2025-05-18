@@ -1,4 +1,8 @@
-use std::{env, io::{Error, Write}, path};
+use std::{
+    env,
+    io::{Error, Write},
+    path,
+};
 // 指定されたパスのディレクトリを作成します
 // 関数の戻り値型を Result<(), ()> から Result<(), ProjectCreationError> に変更します
 pub fn dir_creation(path_str: &str) -> Result<(), Error> {

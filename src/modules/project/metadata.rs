@@ -1,6 +1,6 @@
+use crate::dprintln;
 use crate::{modules::pkg::PackageData, utils::files::is_file_exists};
 use std::env;
-use crate::dprintln;
 pub fn metadata() -> Result<(), ()> {
     let current_path = env::current_dir().unwrap();
     let mut current_path = current_path.as_path();
@@ -8,7 +8,7 @@ pub fn metadata() -> Result<(), ()> {
         let metadata_path = current_path.join("package.yaml");
         dprintln!("{}", metadata_path.to_str().unwrap());
         if is_file_exists(metadata_path.to_str().unwrap()) {
-          dprintln!("Found package.yaml");
+            dprintln!("Found package.yaml");
             let read_data = std::fs::read_to_string(metadata_path.to_str().unwrap());
             if read_data.is_err() {
                 eprintln!("Error: Failed to read package.yaml");
