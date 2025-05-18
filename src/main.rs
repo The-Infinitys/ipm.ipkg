@@ -1,5 +1,5 @@
-use cmd_arg::cmd_arg::{Option, OptionType};
 use cmd_arg::cmd_arg::get as get_cmd_data;
+use cmd_arg::cmd_arg::{Option, OptionType};
 use ipkg::dprintln;
 use ipkg::modules::{messages, project};
 use ipkg::utils::shell::{self, ExitStatus};
