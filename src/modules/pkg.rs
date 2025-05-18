@@ -13,6 +13,7 @@ pub struct PackageData {
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(default)]
+#[derive(Default)]
 pub struct AboutData {
     pub author: AuthorAboutData,
     pub package: PackageAboutData,
@@ -34,6 +35,7 @@ pub struct PackageAboutData {
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(default)]
+#[derive(Default)]
 pub struct RelationData {
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub depend: Vec<Vec<DependPackageData>>, // 依存関係のグループ（代替は内側のVecで表現）
@@ -197,25 +199,7 @@ impl Default for DependPackageData {
     }
 }
 
-impl Default for AboutData {
-    fn default() -> Self {
-        AboutData {
-            author: AuthorAboutData::default(),
-            package: PackageAboutData::default(),
-        }
-    }
-}
 
-impl Default for RelationData {
-    fn default() -> Self {
-        RelationData {
-            depend: Vec::new(),
-            suggests: Vec::new(),
-            recommends: Vec::new(),
-            conflict: Vec::new(),
-        }
-    }
-}
 
 #[cfg(test)]
 mod tests {
