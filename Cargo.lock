@@ -14,7 +14,7 @@ dependencies = [
 [[package]]
 name = "cmd_arg"
 version = "0.1.0"
-source = "git+https://github.com/The-Infinitys/rust.cmd-args.git?branch=main#d6e07b71d126a76e4f6387877946c155de6be28d"
+source = "git+https://github.com/The-Infinitys/rust.cmd-arg.git?branch=main#d6e07b71d126a76e4f6387877946c155de6be28d"
 dependencies = [
  "colored",
 ]
