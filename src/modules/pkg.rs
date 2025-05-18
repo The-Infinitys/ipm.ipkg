@@ -199,8 +199,6 @@ impl Default for DependPackageData {
     }
 }
 
-
-
 #[cfg(test)]
 mod tests {
     use std::str::FromStr;
