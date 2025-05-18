@@ -1,0 +1,1 @@
+#/bin/ipkg-shell
