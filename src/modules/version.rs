@@ -4,6 +4,8 @@
 //! 複数の条件を組み合わせたバージョン範囲を表現・評価する機能を含みます。
 use std::{fmt, fmt::Display, str::FromStr};
 
+use serde::{Deserialize, Serialize};
+
 /// カスタムバージョン番号を表す構造体。
 ///
 /// バージョン文字列を元の形式 (`string`)、数値部分 (`nums`)、
@@ -28,6 +30,25 @@ impl Default for Version {
     fn default() -> Self {
         // デフォルトの "1.0.0" は有効なバージョン文字列としてFromStrでパースされるはずです。
         Version::from_str("1.0.0").unwrap()
+    }
+}
+
+impl Serialize for Version {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serializer.serialize_str(&self.to_string())
+    }
+}
+
+impl<'de> Deserialize<'de> for Version {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        Version::from_str(&s).map_err(serde::de::Error::custom)
     }
 }
 
@@ -282,8 +303,27 @@ pub struct VersionRange {
     _range_data: Option<RangeData>,
 }
 
+impl Serialize for VersionRange {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serializer.serialize_str(&self.to_string())
+    }
+}
+
+impl<'de> Deserialize<'de> for VersionRange {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        VersionRange::from_str(&s).map_err(serde::de::Error::custom)
+    }
+}
+
 /// バージョン範囲の境界値を格納する内部構造体。
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 struct RangeData {
     /// 許容される最も新しいバージョン（含まない） (例: < 2.0 の 2.0)。
     strictly_earlier: Option<Version>,

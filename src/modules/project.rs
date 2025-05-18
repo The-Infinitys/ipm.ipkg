@@ -3,6 +3,7 @@ use std::fmt::{Display, Formatter, Result};
 use std::{env, fs};
 mod create;
 use super::messages;
+use super::pkg::AuthorAboutData;
 #[derive(PartialEq, Eq)]
 enum ProjectTemplateType {
     Default,
@@ -10,6 +11,7 @@ enum ProjectTemplateType {
 struct ProjectParams {
     project_name: String,
     project_template: ProjectTemplateType,
+    author: AuthorAboutData,
 }
 
 impl Display for ProjectParams {
@@ -38,10 +40,14 @@ fn project_create(args: Vec<&Argument>) {
     let mut params = ProjectParams {
         project_name: String::new(),
         project_template: ProjectTemplateType::Default,
+        author: AuthorAboutData {
+            name: String::new(),
+            email: String::new(),
+        },
     };
     for arg in args {
         match arg.arg_str.as_str() {
-            "--name" => {
+            "--project-name" => {
                 if arg.arg_values.len() == 1 {
                     params.project_name = arg.arg_values.first().unwrap().to_owned();
                 }
@@ -54,6 +60,16 @@ fn project_create(args: Vec<&Argument>) {
                     }
                 }
             }
+            "--author-name" => {
+                if arg.arg_values.len() == 1 {
+                    params.author.name = arg.arg_values.first().unwrap().to_owned();
+                }
+            }
+            "--author-email" => {
+                if arg.arg_values.len() == 1 {
+                    params.author.email = arg.arg_values.first().unwrap().to_owned();
+                }
+            }
             _ => messages::unknown(),
         }
     }
@@ -63,17 +79,27 @@ fn project_create(args: Vec<&Argument>) {
     if params.project_template == ProjectTemplateType::Default {
         params.project_template = ProjectTemplateType::Default;
     }
+    if params.author.name.is_empty() {
+        params.author.name = question::kebab_loop("Author name: ");
+    }
+    if params.author.email.is_empty() {
+        params.author.email = question::email_loop("Author email: ");
+    }
+    println!("{}", params);
     match fs::create_dir(&params.project_name) {
         Ok(_) => {
             if env::set_current_dir(&params.project_name).is_err() {
                 eprintln!("Error: failed to set current dir: {}", &params.project_name);
                 shell::exit(ExitStatus::Failure);
             }
-            create::create(params);
+            if create::create(&params).is_err() {
+                eprintln!("Error: failed to create project: {}", &params.project_name);
+                shell::exit(ExitStatus::Failure);
+            }
         }
         Err(err) => {
             eprintln!(
-                "Error: failed to create dir: {}\nBecause of: {}",
+                "Error: failed to create dir: {}\nDue to: {}",
                 &params.project_name,
                 err.kind()
             );

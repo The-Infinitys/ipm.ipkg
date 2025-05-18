@@ -262,6 +262,42 @@ pub fn screaming_snake_loop(msg: &str) -> String {
     }
 }
 
+/// メールアドレス文字列を検証します (例: user@example.com)
+///
+/// # 引数
+///
+/// * `msg` - ユーザーに表示するメッセージ。
+///
+/// # 戻り値
+///
+/// * `Ok(String)` - 入力が有効なSCREAMING_SNAKE_CASEの場合。
+/// * `Err(String)` - 入力が無効な場合、エラーメッセージを含む。
+pub fn email_address(msg: &str) -> Result<String, String> {
+    let email_regex = Regex::new(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$").unwrap();
+    regex_string(msg, email_regex)
+}
+
+/// 有効なメールアドレスが得られるまで入力を繰り返します。
+///
+/// # 引数
+///
+/// * `msg` - ユーザーに表示するメッセージ。
+///
+/// # 戻り値
+///
+/// * `String` - ユーザーが提供した有効なメールアドレスの文字列。
+pub fn email_loop(msg: &str) -> String {
+    loop {
+        match email_address(msg) {
+            Ok(answer) => return answer,
+            Err(error) => {
+                print!("({}) ", error.red());
+                continue;
+            }
+        };
+    }
+}
+
 #[cfg(test)]
 mod tests {
     #[test]

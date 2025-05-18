@@ -1,34 +1,46 @@
 use super::version::{Version, VersionRange};
 use colored::Colorize;
+use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 
+#[derive(Debug, Serialize, Deserialize)]
 pub struct PackageData {
     pub about: AboutData,
+    #[serde(skip_serializing_if = "RelationData::is_empty")]
     pub relation: RelationData,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
 pub struct AboutData {
     pub author: AuthorAboutData,
     pub package: PackageAboutData,
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct AuthorAboutData {
     pub name: String,
     pub email: String,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
 pub struct PackageAboutData {
     pub name: String,
     pub version: Version,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
 pub struct RelationData {
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub depend: Vec<Vec<DependPackageData>>, // 依存関係のグループ（代替は内側のVecで表現）
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub suggests: Vec<Vec<DependPackageData>>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub recommends: Vec<Vec<DependPackageData>>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub conflict: Vec<DependPackageData>, // 競合パッケージのリスト
 }
 
+#[derive(Debug, Serialize, Deserialize)]
 pub struct DependPackageData {
     pub name: String,
     pub version: VersionRange,
@@ -139,6 +151,16 @@ impl Default for PackageData {
                 conflict: Vec::new(),
             },
         }
+    }
+}
+
+impl RelationData {
+    /// 全ての関係フィールドが空かどうかを判定します
+    fn is_empty(&self) -> bool {
+        self.depend.is_empty()
+            && self.suggests.is_empty()
+            && self.recommends.is_empty()
+            && self.conflict.is_empty()
     }
 }
 
