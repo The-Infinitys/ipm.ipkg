@@ -33,11 +33,11 @@ pub fn metadata() -> Result<PackageData, ()> {
     let read_data = read_data.unwrap();
     match serde_yaml::from_str::<PackageData>(&read_data) {
         Ok(package_data) => {
-            return Ok(package_data);
+            Ok(package_data)
         }
         Err(e) => {
             eprintln!("Error: Failed to parse package.yaml: {}", e);
-            return Err(());
+            Err(())
         }
     }
 }
@@ -46,11 +46,11 @@ pub fn show_metadata() -> Result<(), ()> {
     match read_data {
         Ok(package_data) => {
             println!("{}", package_data);
-            return Ok(());
+            Ok(())
         }
         Err(_) => {
             eprintln!("Error: Failed to parse package.yaml");
-            return Err(());
+            Err(())
         }
     }
 }
