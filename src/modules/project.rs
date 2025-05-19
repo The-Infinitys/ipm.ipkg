@@ -1,4 +1,5 @@
 use crate::utils::shell::{self, ExitStatus, question};
+use build::BuildOptions;
 use cmd_arg::cmd_arg::Option;
 use std::{env, fs};
 mod build;
@@ -17,10 +18,23 @@ pub fn project(args: Vec<&Option>) {
     match sub_cmd.opt_str.as_str() {
         "create" | "new" => project_create(sub_args),
         "info" | "metadata" => project_metadata(),
+        "build" | "compile" => project_build(sub_args),
         _ => messages::unknown(),
     }
 }
-
+fn project_build(args: Vec<&Option>) {
+    let build_options: build::BuildOptions = BuildOptions::default();
+    for arg in args {
+        println!("{:#?}", arg);
+    }
+    match build::build(build_options) {
+        Ok(()) => shell::exit(ExitStatus::Success),
+        Err(msg) => {
+            eprintln!("Error: {}", msg);
+            shell::exit(ExitStatus::Failure)
+        }
+    }
+}
 fn project_metadata() {
     if metadata::show_metadata().is_err() {
         eprintln!("Error: failed to get metadata");
