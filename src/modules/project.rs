@@ -40,7 +40,7 @@ pub fn project(args: Vec<&Option>) {
 }
 
 fn project_metadata() {
-    if metadata::metadata().is_err() {
+    if metadata::show_metadata().is_err() {
         eprintln!("Error: failed to get metadata");
         shell::exit(ExitStatus::Failure);
     }
