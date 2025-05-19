@@ -2,6 +2,7 @@ use crate::utils::shell::{self, ExitStatus, question};
 use cmd_arg::cmd_arg::Option;
 use std::fmt::{Display, Formatter, Result};
 use std::{env, fs};
+mod build;
 mod create;
 mod metadata;
 use super::messages;

@@ -20,6 +20,10 @@ pub fn default() -> Result<(), Error> {
             content: include_str!("templates/default/src/main.sh").to_string(),
         },
         SetUpList {
+            path: String::from("scripts/build.sh"),
+            content: include_str!("templates/default/scripts/build.sh").to_string(),
+        },
+        SetUpList {
             path: String::from("scripts/install.sh"),
             content: include_str!("templates/default/scripts/install.sh").to_string(),
         },
