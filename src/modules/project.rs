@@ -1,31 +1,12 @@
 use crate::utils::shell::{self, ExitStatus, question};
 use cmd_arg::cmd_arg::Option;
-use std::fmt::{Display, Formatter, Result};
 use std::{env, fs};
 mod build;
 mod create;
 mod metadata;
 use super::messages;
 use super::pkg::AuthorAboutData;
-#[derive(PartialEq, Eq)]
-enum ProjectTemplateType {
-    Default,
-}
-struct ProjectParams {
-    project_name: String,
-    project_template: ProjectTemplateType,
-    author: AuthorAboutData,
-}
-
-impl Display for ProjectParams {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        let template = match self.project_template {
-            ProjectTemplateType::Default => "default",
-        };
-        write!(f, "Project: {}\nTemplate: {}", self.project_name, template)
-    }
-}
-
+use create::{ProjectParams, ProjectTemplateType};
 pub fn project(args: Vec<&Option>) {
     if args.is_empty() {
         messages::unknown();

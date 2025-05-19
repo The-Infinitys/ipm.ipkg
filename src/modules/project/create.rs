@@ -1,21 +1,35 @@
 use std::io;
 use thiserror::Error;
 mod templates;
+use super::super::pkg::AuthorAboutData;
 use super::super::pkg::PackageData;
-use super::{ProjectParams, ProjectTemplateType};
 use crate::utils::files::{dir_creation, file_creation};
+use std::fmt::{self, Display, Formatter};
+#[derive(PartialEq, Eq)]
+pub enum ProjectTemplateType {
+    Default,
+}
+pub struct ProjectParams {
+    pub project_name: String,
+    pub project_template: ProjectTemplateType,
+    pub author: AuthorAboutData,
+}
 
-// カスタムエラー型を定義します
-#[derive(Error, Debug)]
+impl Display for ProjectParams {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        let template = match self.project_template {
+            ProjectTemplateType::Default => "default",
+        };
+        write!(f, "Project: {}\nTemplate: {}", self.project_name, template)
+    }
+}
+
+#[derive(Debug, Error)]
 pub enum ProjectCreationError {
     #[error("YAML serialization error: {0}")]
     YamlError(#[from] serde_yaml::Error),
-
     #[error("I/O error: {0}")]
     IoError(#[from] io::Error),
-    // 将来的に他の種類のエラーが増えた場合、ここに追加します
-    // #[error("Template specific error: {0}")]
-    // TemplateError(String),
 }
 
 // 関数の戻り値型を Result<(), ()> から Result<(), ProjectCreationError> に変更します
