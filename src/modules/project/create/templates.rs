@@ -20,20 +20,20 @@ pub fn default() -> Result<(), Error> {
             content: include_str!("templates/default/src/main.sh").to_string(),
         },
         SetUpList {
-            path: String::from("scripts/build.sh"),
-            content: include_str!("templates/default/scripts/build.sh").to_string(),
+            path: String::from("ipkg/ipkg/scriptsbuild.sh"),
+            content: include_str!("templates/default/ipkg/scripts/build.sh").to_string(),
         },
         SetUpList {
-            path: String::from("scripts/install.sh"),
-            content: include_str!("templates/default/scripts/install.sh").to_string(),
+            path: String::from("ipkg/scripts/install.sh"),
+            content: include_str!("templates/default/ipkg/scripts/install.sh").to_string(),
         },
         SetUpList {
-            path: String::from("scripts/remove.sh"),
-            content: include_str!("templates/default/scripts/remove.sh").to_string(),
+            path: String::from("ipkg/scripts/remove.sh"),
+            content: include_str!("templates/default/ipkg/scripts/remove.sh").to_string(),
         },
         SetUpList {
-            path: String::from("scripts/purge.sh"),
-            content: include_str!("templates/default/scripts/purge.sh").to_string(),
+            path: String::from("ipkg/scripts/purge.sh"),
+            content: include_str!("templates/default/ipkg/scripts/purge.sh").to_string(),
         },
     ];
     setup(setup_list)
