@@ -44,7 +44,9 @@ pub struct RelationData {
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub recommends: Vec<Vec<DependPackageData>>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub conflict: Vec<DependPackageData>, // 競合パッケージのリスト
+    pub conflicts: Vec<DependPackageData>, // 競合パッケージのリスト
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub virtuals: Vec<DependPackageData>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -126,15 +128,19 @@ impl Display for PackageData {
                 }
             }
         }
-
-        // 競合パッケージの表示 (既存部分)
-        if !self.relation.conflict.is_empty() {
+        if !self.relation.conflicts.is_empty() {
             writeln!(f, "\n{}", "Conflicts:".bold())?;
-            for conflict in &self.relation.conflict {
+            for conflict in &self.relation.conflicts {
                 writeln!(f, "  - {} ({})", conflict.name.red(), conflict.version)?;
             }
         }
 
+        if !self.relation.virtuals.is_empty() {
+            writeln!(f, "\n{}", "Virtual Packages:".bold())?;
+            for virtual_pkg in &self.relation.virtuals {
+                writeln!(f, "  - {} ({})", virtual_pkg.name.red(), virtual_pkg.version)?;
+            }
+        }
         Ok(())
     }
 }
@@ -156,7 +162,8 @@ impl Default for PackageData {
                 depend: Vec::new(),
                 suggests: Vec::new(),
                 recommends: Vec::new(),
-                conflict: Vec::new(),
+                conflicts: Vec::new(),
+                virtuals: Vec::new(),
             },
         }
     }
@@ -168,7 +175,7 @@ impl RelationData {
         self.depend.is_empty()
             && self.suggests.is_empty()
             && self.recommends.is_empty()
-            && self.conflict.is_empty()
+            && self.conflicts.is_empty()
     }
 }
 
@@ -258,7 +265,7 @@ mod tests {
         ]);
 
         // Add conflicts
-        data.relation.conflict.push(DependPackageData {
+        data.relation.conflicts.push(DependPackageData {
             name: "old-package".to_string(),
             version: VersionRange::from_str("0.9.0").unwrap(),
         });
