@@ -1,2 +1,2 @@
-pub mod dir_path;
 mod configure;
+pub mod dir_path;
