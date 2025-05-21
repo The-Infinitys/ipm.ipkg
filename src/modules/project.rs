@@ -48,7 +48,11 @@ fn project_build(args: Vec<&Option>) {
                     };
                 }
             }
-            _ => messages::unknown(),
+            _ => {
+                eprintln!("Unknown Option: {}", arg.opt_str);
+                eprintln!("Available Options: --release, --debug ,--shell|--sh");
+                messages::unknown()
+            }
         }
     }
     match build::build(build_options) {
