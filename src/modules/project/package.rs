@@ -55,5 +55,6 @@ impl Display for PackageOptions {
 }
 pub fn package(opts: PackageOptions) -> Result<(), String> {
     println!("{}", opts);
+    eprintln!("Sorry, This function is not available now.");
     Ok(())
 }
