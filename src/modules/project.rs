@@ -89,9 +89,15 @@ fn project_create(args: Vec<&Option>) {
             }
             "--template" => {
                 if arg.opt_values.len() == 1 {
-                    match arg.opt_values.first().unwrap().as_str() {
-                        "default" => params.project_template = ProjectTemplateType::Default,
-                        _ => messages::unknown(),
+                    let project_template =
+                        ProjectTemplateType::from_str(arg.opt_values.first().unwrap().as_str());
+                    match project_template {
+                        Ok(project_template) => params.project_template = project_template,
+                        Err(e) => {
+                            let msg = format!("Error: {}", e);
+                            eprintln!("Error: {}", msg);
+                            shell::exit(ExitStatus::Failure);
+                        }
                     }
                 }
             }

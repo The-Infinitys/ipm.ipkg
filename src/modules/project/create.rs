@@ -1,4 +1,5 @@
 use std::io;
+use std::str::FromStr;
 use thiserror::Error;
 mod templates;
 use super::super::pkg::AuthorAboutData;
@@ -8,6 +9,17 @@ use std::fmt::{self, Display, Formatter};
 #[derive(PartialEq, Eq)]
 pub enum ProjectTemplateType {
     Default,
+    Rust,
+}
+impl FromStr for ProjectTemplateType {
+    type Err = String;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_ascii_lowercase().as_str() {
+            "default" => Ok(Self::Default),
+            "rust" => Ok(Self::Rust),
+            _ => Err(format!("Unavailable Template: {}", s)),
+        }
+    }
 }
 pub struct ProjectParams {
     pub project_name: String,
@@ -19,6 +31,7 @@ impl Display for ProjectParams {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         let template = match self.project_template {
             ProjectTemplateType::Default => "default",
+            ProjectTemplateType::Rust => "rust",
         };
         write!(f, "Project: {}\nTemplate: {}", self.project_name, template)
     }
@@ -38,20 +51,17 @@ pub fn create(params: &ProjectParams) -> Result<(), ProjectCreationError> {
     project_data.about.package.name = params.project_name.to_string();
     project_data.about.author = params.author.clone();
     let project_data_filename = "package.yaml";
-    // serde_yaml::to_string が返す serde_yaml::Error は
-    // ProjectCreationError::YamlError に自動変換されます ('?' 演算子と #[from] 属性のおかげ)
     let data = serde_yaml::to_string(&project_data)?;
-
-    // std::fs::write が返す std::io::Error は
-    // ProjectCreationError::IoError に自動変換されます ('?' 演算子と #[from] 属性のおかげ)
     file_creation(project_data_filename, &data)?;
-    match params.project_template {
-        ProjectTemplateType::Default => match templates::default() {
-            Ok(()) => Ok(()),
-            Err(e) => {
-                eprintln!("Error: {}", e);
-                Err(ProjectCreationError::IoError(e))
-            }
-        },
+    let creation_result = match params.project_template {
+        ProjectTemplateType::Default => templates::default(),
+        ProjectTemplateType::Rust => templates::rust(),
+    };
+    match creation_result {
+        Ok(()) => Ok(()),
+        Err(e) => {
+            eprintln!("Error: {}", e);
+            Err(ProjectCreationError::IoError(e))
+        }
     }
 }
