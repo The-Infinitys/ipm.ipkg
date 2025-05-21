@@ -8,8 +8,7 @@ use std::path::Path;
 pub fn configure() -> Result<(), Error> {
     let package_list_data = {
         let package_list_data = serde_yaml::to_string(&list::PackageListData::default());
-        let package_list_data = package_list_data.unwrap();
-        package_list_data
+        package_list_data.unwrap()
     };
     let configure_list = [
         [".ipkg/README.md", include_str!("data/local/README.md")],
@@ -17,7 +16,7 @@ pub fn configure() -> Result<(), Error> {
             ".ipkg/bin/ipkg-local",
             include_str!("data/local/ipkg-local"),
         ],
-        ["data/packages/list.yaml", package_list_data.as_str()],
+        [".ipkg/packages/list.yaml", package_list_data.as_str()],
     ];
     let home_dir = env::var("HOME").map_err(|e| {
         Error::new(
