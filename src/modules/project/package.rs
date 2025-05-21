@@ -1,7 +1,7 @@
+use super::ExecShell;
 use colored::Colorize;
 use std::fmt::{self, Display};
 use std::str::FromStr;
-use super::ExecShell;
 #[derive(Default)]
 pub struct PackageOptions {
     pub target: PackageTarget,
