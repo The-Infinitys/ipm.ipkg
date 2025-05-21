@@ -12,10 +12,11 @@ mod build;
 mod create;
 mod install;
 mod metadata;
+mod package;
 mod purge;
 mod remove;
 use super::messages;
-use super::package::AuthorAboutData;
+use super::pkg::AuthorAboutData;
 use create::{ProjectParams, ProjectTemplateType};
 
 pub fn project(args: Vec<&Option>) {
@@ -32,10 +33,40 @@ pub fn project(args: Vec<&Option>) {
         "install" => project_install(sub_args), // Added install command
         "remove" => project_remove(sub_args),   // Added remove command
         "purge" => project_purge(sub_args),     // Added purge command
+        "package" | "pkg" => project_package(sub_args),
         _ => messages::unknown(),
     }
 }
-
+fn project_package(args: Vec<&Option>) {
+    let mut package_options: package::PackageOptions = package::PackageOptions::default();
+    for arg in args {
+        match arg.opt_str.as_str() {
+            "--target" | "target" => {
+                if arg.opt_values.len() == 1 {
+                    match package::PackageTarget::from_str(arg.opt_values.first().unwrap()) {
+                        Ok(package_target) => package_options.target = package_target,
+                        Err(e) => {
+                            eprintln!("Error: {}", e);
+                            shell::exit(ExitStatus::Failure)
+                        }
+                    }
+                }
+            }
+            _ => {
+                eprintln!("Invalid Option: {}", arg.opt_str);
+                eprintln!("Available Options: --target");
+                messages::unknown();
+            }
+        }
+    }
+    match package::package(package_options) {
+        Ok(()) => shell::exit(ExitStatus::Success),
+        Err(msg) => {
+            eprintln!("Error: {}", msg);
+            shell::exit(ExitStatus::Failure)
+        }
+    }
+}
 fn project_build(args: Vec<&Option>) {
     let mut build_options: build::BuildOptions = BuildOptions::default();
     for arg in args {

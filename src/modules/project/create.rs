@@ -2,8 +2,8 @@ use std::io;
 use std::str::FromStr;
 use thiserror::Error;
 mod templates;
-use super::super::package::AuthorAboutData;
-use super::super::package::PackageData;
+use super::super::pkg::AuthorAboutData;
+use super::super::pkg::PackageData;
 use crate::utils::files::file_creation;
 use std::fmt::{self, Display, Formatter};
 #[derive(PartialEq, Eq)]

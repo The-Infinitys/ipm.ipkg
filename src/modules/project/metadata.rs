@@ -1,5 +1,5 @@
 use crate::dprintln;
-use crate::{modules::package::PackageData, utils::files::is_file_exists};
+use crate::{modules::pkg::PackageData, utils::files::is_file_exists};
 
 use std::env;
 use std::path::PathBuf;
