@@ -3,9 +3,7 @@ use std::env;
 use std::io::{Error, ErrorKind};
 use std::path::Path;
 pub fn configure() -> Result<(), Error> {
-    let configure_list = [
-        ["/etc/ipkg/README.md", include_str!("data/global/README.md")]
-    ];
+    let configure_list = [["/etc/ipkg/README.md", include_str!("data/global/README.md")]];
     let home_dir = env::var("HOME").unwrap();
     let home_dir = Path::new(&home_dir);
     for configure_data in configure_list {
