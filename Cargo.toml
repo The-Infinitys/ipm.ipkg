@@ -5,6 +5,7 @@ edition = "2024"
 build = "build.rs"
 
 [dependencies]
+chrono = { version = "0.4.41", features = ["serde"] }
 cmd_arg = { git = "https://github.com/The-Infinitys/rust.cmd-arg.git", branch = "main"}
 colored = "3.0.0"
 regex = "1.11.1"

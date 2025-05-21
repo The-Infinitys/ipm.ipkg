@@ -3,6 +3,7 @@ use colored::Colorize;
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 pub mod depend;
+pub mod list;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(default)]
 pub struct PackageData {

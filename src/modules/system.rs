@@ -1,5 +1,5 @@
 mod configure;
-pub mod dir_path;
+pub mod path;
 use super::messages;
 use cmd_arg::cmd_arg::Option;
 pub fn system(args: Vec<&Option>) {
