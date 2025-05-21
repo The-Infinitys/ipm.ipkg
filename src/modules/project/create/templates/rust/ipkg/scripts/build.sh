@@ -1,1 +1,1 @@
-cargo build
+cargo build --$IPKG_BUILD_MODE
