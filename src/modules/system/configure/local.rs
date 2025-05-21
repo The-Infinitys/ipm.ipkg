@@ -6,7 +6,8 @@ use std::path::Path;
 pub fn configure() -> Result<(), Error> {
     let configure_list = [
         [".ipkg/README.md", include_str!("data/local/README.md")],
-        [".ipkg/bin/ipkg-local", "data/local/ipkg-local"],
+        [".ipkg/bin/ipkg-local", include_str!("data/local/ipkg-local")],
+        ["data/packages/list.yaml", include_str!("data/local/packages-list.yaml")],
     ];
     let home_dir = env::var("HOME").map_err(|e| {
         Error::new(

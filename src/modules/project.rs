@@ -15,7 +15,7 @@ mod metadata;
 mod purge;
 mod remove;
 use super::messages;
-use super::pkg::AuthorAboutData;
+use super::package::AuthorAboutData;
 use create::{ProjectParams, ProjectTemplateType};
 
 pub fn project(args: Vec<&Option>) {
