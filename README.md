@@ -1,1 +1,1 @@
-# ipm-cli
+# IPKG (Infinite Package)
