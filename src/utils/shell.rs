@@ -62,3 +62,9 @@ pub fn hostname() -> String {
     let hostname: String = String::from_utf8(output.stdout).unwrap().trim().to_owned();
     hostname
 }
+
+pub fn shell_type() -> String {
+    env::var("SHELL")
+        .unwrap_or("unknown".to_string())
+        .to_string()
+}

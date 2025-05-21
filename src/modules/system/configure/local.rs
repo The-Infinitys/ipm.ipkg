@@ -1,8 +1,8 @@
 use crate::utils::files::file_creation;
+use crate::utils::shell::shell_type;
 use std::env;
 use std::io::{Error, ErrorKind};
 use std::path::Path;
-
 pub fn configure() -> Result<(), Error> {
     let configure_list = [
         [".ipkg/README.md", include_str!("data/local/README.md")],
@@ -45,7 +45,11 @@ pub fn configure() -> Result<(), Error> {
     let ipkg_bin_path = home_dir.join(".ipkg/bin").to_str().unwrap().to_string();
     let path_var = env::var("PATH").unwrap_or_default();
     if !path_var.split(':').any(|p| p == ipkg_bin_path) {
-        let profile_path = home_dir.join(".profile").to_str().unwrap().to_string();
+        let profile_path = home_dir
+            .join(format!(".{}rc", shell_type()))
+            .to_str()
+            .unwrap()
+            .to_string();
         let path_export = format!("\nexport PATH=\"$PATH:{}\"", ipkg_bin_path);
         let append_result = file_creation(&profile_path, &path_export);
         match append_result {
