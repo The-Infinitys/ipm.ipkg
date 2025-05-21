@@ -18,6 +18,38 @@ mod remove;
 use super::messages;
 use super::pkg::AuthorAboutData;
 use create::{ProjectParams, ProjectTemplateType};
+use std::fmt::{self, Display};
+#[derive(Default)]
+pub enum ExecShell {
+    #[default]
+    RBash,
+    Bash,
+    Zsh,
+    Csh,
+}
+impl FromStr for ExecShell {
+    type Err = String;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_ascii_lowercase().as_str() {
+            "bash" => Ok(Self::Bash),
+            "zsh" => Ok(Self::Zsh),
+            "csh" => Ok(Self::Csh),
+            "rbash" => Ok(Self::RBash),
+            _ => Err(format!("Unavailable Shell: {}", s)),
+        }
+    }
+}
+
+impl Display for ExecShell {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ExecShell::RBash => write!(f, "restricted bash"),
+            ExecShell::Bash => write!(f, "bash"),
+            ExecShell::Zsh => write!(f, "zsh"),
+            ExecShell::Csh => write!(f, "csh"),
+        }
+    }
+}
 
 pub fn project(args: Vec<&Option>) {
     if args.is_empty() {
@@ -81,7 +113,7 @@ fn project_build(args: Vec<&Option>) {
                 if arg.opt_values.len() == 1 {
                     let build_shell = &arg.opt_values.first().unwrap();
 
-                    let binding = build::BuildShell::from_str(build_shell);
+                    let binding = build::ExecShell::from_str(build_shell);
                     match binding {
                         Ok(shell_opt) => {
                             build_options.build_shell = shell_opt;
@@ -119,7 +151,7 @@ fn project_install(args: Vec<&Option>) {
                 if arg.opt_values.len() == 1 {
                     let build_shell = &arg.opt_values.first().unwrap();
 
-                    let binding = install::InstallShell::from_str(build_shell);
+                    let binding = install::ExecShell::from_str(build_shell);
                     match binding {
                         Ok(shell_opt) => {
                             install_options.install_shell = shell_opt;
@@ -163,7 +195,7 @@ fn project_remove(args: Vec<&Option>) {
                 if arg.opt_values.len() == 1 {
                     let build_shell = &arg.opt_values.first().unwrap();
 
-                    let binding = remove::RemoveShell::from_str(build_shell);
+                    let binding = ExecShell::from_str(build_shell);
                     match binding {
                         Ok(shell_opt) => {
                             remove_options.remove_shell = shell_opt;
@@ -201,7 +233,7 @@ fn project_purge(args: Vec<&Option>) {
                 if arg.opt_values.len() == 1 {
                     let build_shell = &arg.opt_values.first().unwrap();
 
-                    let binding = purge::PurgeShell::from_str(build_shell);
+                    let binding = ExecShell::from_str(build_shell);
                     match binding {
                         Ok(shell_opt) => {
                             purge_options.purge_shell = shell_opt;

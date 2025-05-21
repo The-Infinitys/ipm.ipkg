@@ -1,14 +1,14 @@
+use super::ExecShell;
 use super::metadata::{self, metadata};
 use crate::dprintln;
 use crate::modules::version::Version;
 use colored::Colorize;
 use std::fmt::{self, Display};
 use std::process::Command;
-use std::str::FromStr;
 
 #[derive(Default)]
 pub struct PurgeOptions {
-    pub purge_shell: PurgeShell,
+    pub purge_shell: ExecShell,
 }
 
 impl Display for PurgeOptions {
@@ -28,39 +28,6 @@ impl Display for PurgeOptions {
         Ok(())
     }
 }
-
-#[derive(Default)]
-pub enum PurgeShell {
-    #[default]
-    RBash,
-    Bash,
-    Zsh,
-    Csh,
-}
-impl FromStr for PurgeShell {
-    type Err = String;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s.to_ascii_lowercase().as_str() {
-            "bash" => Ok(Self::Bash),
-            "zsh" => Ok(Self::Zsh),
-            "csh" => Ok(Self::Csh),
-            "rbash" => Ok(Self::RBash),
-            _ => Err(format!("Unavailable Shell: {}", s)),
-        }
-    }
-}
-
-impl Display for PurgeShell {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            PurgeShell::RBash => write!(f, "restricted bash"),
-            PurgeShell::Bash => write!(f, "bash"),
-            PurgeShell::Zsh => write!(f, "zsh"),
-            PurgeShell::Csh => write!(f, "csh"),
-        }
-    }
-}
-
 pub fn purge(opts: PurgeOptions) -> Result<(), String> {
     dprintln!("{}", &opts);
     let target_dir = metadata::get_dir();
@@ -75,7 +42,7 @@ pub fn purge(opts: PurgeOptions) -> Result<(), String> {
     let project_metadata = metadata().unwrap();
 
     // Configure purge shell
-    fn setup_purgeshell(
+    fn setup_execshell(
         cmd: &mut Command,
         target_dir: &std::path::Path,
         project_name: &str,
@@ -88,16 +55,16 @@ pub fn purge(opts: PurgeOptions) -> Result<(), String> {
     }
 
     let mut purge_process = match opts.purge_shell {
-        PurgeShell::RBash => {
+        ExecShell::RBash => {
             let mut cmd = Command::new("bash");
             cmd.arg("-r");
             cmd
         }
-        PurgeShell::Bash => Command::new("bash"),
-        PurgeShell::Zsh => Command::new("zsh"),
-        PurgeShell::Csh => Command::new("csh"),
+        ExecShell::Bash => Command::new("bash"),
+        ExecShell::Zsh => Command::new("zsh"),
+        ExecShell::Csh => Command::new("csh"),
     };
-    setup_purgeshell(
+    setup_execshell(
         &mut purge_process,
         &target_dir,
         &project_metadata.about.package.name,

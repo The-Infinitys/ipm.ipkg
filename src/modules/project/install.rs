@@ -8,7 +8,7 @@ use std::str::FromStr;
 
 #[derive(Default)]
 pub struct InstallOptions {
-    pub install_shell: InstallShell,
+    pub install_shell: ExecShell,
     pub install_mode: InstallMode,
 }
 #[derive(Default)]
@@ -50,14 +50,14 @@ impl Display for InstallOptions {
 }
 
 #[derive(Default)]
-pub enum InstallShell {
+pub enum ExecShell {
     #[default]
     RBash,
     Bash,
     Zsh,
     Csh,
 }
-impl FromStr for InstallShell {
+impl FromStr for ExecShell {
     type Err = String;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_ascii_lowercase().as_str() {
@@ -70,13 +70,13 @@ impl FromStr for InstallShell {
     }
 }
 
-impl Display for InstallShell {
+impl Display for ExecShell {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            InstallShell::RBash => write!(f, "restricted bash"),
-            InstallShell::Bash => write!(f, "bash"),
-            InstallShell::Zsh => write!(f, "zsh"),
-            InstallShell::Csh => write!(f, "csh"),
+            ExecShell::RBash => write!(f, "restricted bash"),
+            ExecShell::Bash => write!(f, "bash"),
+            ExecShell::Zsh => write!(f, "zsh"),
+            ExecShell::Csh => write!(f, "csh"),
         }
     }
 }
@@ -95,7 +95,7 @@ pub fn install(opts: InstallOptions) -> Result<(), String> {
     let project_metadata = metadata().unwrap();
 
     // Configure install shell
-    fn setup_installshell(
+    fn setup_execshell(
         cmd: &mut Command,
         target_dir: &std::path::Path,
         project_name: &str,
@@ -110,16 +110,16 @@ pub fn install(opts: InstallOptions) -> Result<(), String> {
     }
 
     let mut install_process = match opts.install_shell {
-        InstallShell::RBash => {
+        ExecShell::RBash => {
             let mut cmd = Command::new("bash");
             cmd.arg("-r");
             cmd
         }
-        InstallShell::Bash => Command::new("bash"),
-        InstallShell::Zsh => Command::new("zsh"),
-        InstallShell::Csh => Command::new("csh"),
+        ExecShell::Bash => Command::new("bash"),
+        ExecShell::Zsh => Command::new("zsh"),
+        ExecShell::Csh => Command::new("csh"),
     };
-    setup_installshell(
+    setup_execshell(
         &mut install_process,
         &target_dir,
         &project_metadata.about.package.name,

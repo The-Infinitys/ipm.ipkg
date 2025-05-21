@@ -9,7 +9,7 @@ use std::str::FromStr;
 #[derive(Default)]
 pub struct BuildOptions {
     pub build_mode: BuildMode,
-    pub build_shell: BuildShell,
+    pub build_shell: ExecShell,
 }
 
 impl Display for BuildOptions {
@@ -53,14 +53,14 @@ impl Display for BuildMode {
 }
 
 #[derive(Default)]
-pub enum BuildShell {
+pub enum ExecShell {
     #[default]
     RBash,
     Bash,
     Zsh,
     Csh,
 }
-impl FromStr for BuildShell {
+impl FromStr for ExecShell {
     type Err = String;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_ascii_lowercase().as_str() {
@@ -73,13 +73,13 @@ impl FromStr for BuildShell {
     }
 }
 
-impl Display for BuildShell {
+impl Display for ExecShell {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            BuildShell::RBash => write!(f, "restricted bash"),
-            BuildShell::Bash => write!(f, "bash"),
-            BuildShell::Zsh => write!(f, "zsh"),
-            BuildShell::Csh => write!(f, "csh"),
+            ExecShell::RBash => write!(f, "restricted bash"),
+            ExecShell::Bash => write!(f, "bash"),
+            ExecShell::Zsh => write!(f, "zsh"),
+            ExecShell::Csh => write!(f, "csh"),
         }
     }
 }
@@ -98,7 +98,7 @@ pub fn build(opts: BuildOptions) -> Result<(), String> {
     let project_metadata = metadata().unwrap();
 
     // Configure build shell
-    fn setup_buildshell(
+    fn setup_execshell(
         cmd: &mut Command,
         target_dir: &std::path::Path,
         project_name: &str,
@@ -114,16 +114,16 @@ pub fn build(opts: BuildOptions) -> Result<(), String> {
     }
 
     let mut build_process = match opts.build_shell {
-        BuildShell::RBash => {
+        ExecShell::RBash => {
             let mut cmd = Command::new("bash");
             cmd.arg("-r");
             cmd
         }
-        BuildShell::Bash => Command::new("bash"),
-        BuildShell::Zsh => Command::new("zsh"),
-        BuildShell::Csh => Command::new("csh"),
+        ExecShell::Bash => Command::new("bash"),
+        ExecShell::Zsh => Command::new("zsh"),
+        ExecShell::Csh => Command::new("csh"),
     };
-    setup_buildshell(
+    setup_execshell(
         &mut build_process,
         &target_dir,
         &project_metadata.about.package.name,

@@ -1,14 +1,14 @@
+use super::ExecShell;
 use super::metadata::{self, metadata};
 use crate::dprintln;
 use crate::modules::version::Version;
 use colored::Colorize;
 use std::fmt::{self, Display};
 use std::process::Command;
-use std::str::FromStr;
 
 #[derive(Default)]
 pub struct RemoveOptions {
-    pub remove_shell: RemoveShell,
+    pub remove_shell: ExecShell,
 }
 
 impl Display for RemoveOptions {
@@ -29,38 +29,6 @@ impl Display for RemoveOptions {
     }
 }
 
-#[derive(Default)]
-pub enum RemoveShell {
-    #[default]
-    RBash,
-    Bash,
-    Zsh,
-    Csh,
-}
-impl FromStr for RemoveShell {
-    type Err = String;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s.to_ascii_lowercase().as_str() {
-            "bash" => Ok(Self::Bash),
-            "zsh" => Ok(Self::Zsh),
-            "csh" => Ok(Self::Csh),
-            "rbash" => Ok(Self::RBash),
-            _ => Err(format!("Unavailable Shell: {}", s)),
-        }
-    }
-}
-
-impl Display for RemoveShell {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            RemoveShell::RBash => write!(f, "restricted bash"),
-            RemoveShell::Bash => write!(f, "bash"),
-            RemoveShell::Zsh => write!(f, "zsh"),
-            RemoveShell::Csh => write!(f, "csh"),
-        }
-    }
-}
-
 pub fn remove(opts: RemoveOptions) -> Result<(), String> {
     dprintln!("{}", &opts);
     let target_dir = metadata::get_dir();
@@ -75,7 +43,7 @@ pub fn remove(opts: RemoveOptions) -> Result<(), String> {
     let project_metadata = metadata().unwrap();
 
     // Configure remove shell
-    fn setup_removeshell(
+    fn setup_execshell(
         cmd: &mut Command,
         target_dir: &std::path::Path,
         project_name: &str,
@@ -88,16 +56,16 @@ pub fn remove(opts: RemoveOptions) -> Result<(), String> {
     }
 
     let mut remove_process = match opts.remove_shell {
-        RemoveShell::RBash => {
+        ExecShell::RBash => {
             let mut cmd = Command::new("bash");
             cmd.arg("-r");
             cmd
         }
-        RemoveShell::Bash => Command::new("bash"),
-        RemoveShell::Zsh => Command::new("zsh"),
-        RemoveShell::Csh => Command::new("csh"),
+        ExecShell::Bash => Command::new("bash"),
+        ExecShell::Zsh => Command::new("zsh"),
+        ExecShell::Csh => Command::new("csh"),
     };
-    setup_removeshell(
+    setup_execshell(
         &mut remove_process,
         &target_dir,
         &project_metadata.about.package.name,
