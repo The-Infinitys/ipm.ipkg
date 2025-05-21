@@ -7,7 +7,7 @@ pub fn packageslist_filepath() -> PathBuf {
         // unwrap_or_elseを使用
         // HOME環境変数が設定されていない場合
         eprintln!("Error: HOME environment variable not set. Attempting to use username.");
-        let username = shell::username(); 
+        let username = shell::username();
         format!("/home/{}", username)
     });
 
