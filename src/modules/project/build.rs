@@ -86,7 +86,7 @@ impl Display for BuildShell {
 
 pub fn build(opts: BuildOptions) -> Result<(), String> {
     dprintln!("{}", &opts);
-    let target_dir = metadata::get_path();
+    let target_dir = metadata::get_dir();
     let target_dir = match target_dir {
         Ok(path) => path,
         Err(()) => {
@@ -109,7 +109,8 @@ pub fn build(opts: BuildOptions) -> Result<(), String> {
         cmd.current_dir(target_dir)
             .env("IPKG_PACKAGE_NAME", project_name)
             .env("IPKG_PACKAGE_VERSION", project_version.to_string())
-            .env("IPKG_BUILD_MODE", build_mode);
+            .env("IPKG_BUILD_MODE", build_mode)
+            .arg("ipkg/scripts/build.sh");
     }
 
     let mut build_process = match opts.build_shell {

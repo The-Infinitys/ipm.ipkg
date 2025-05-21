@@ -3,14 +3,14 @@ use crate::{modules::pkg::PackageData, utils::files::is_file_exists};
 
 use std::env;
 use std::path::PathBuf;
-pub fn get_path() -> Result<PathBuf, ()> {
+pub fn get_dir() -> Result<PathBuf, ()> {
     let current_path = env::current_dir().unwrap();
     let mut current_path = current_path.as_path();
     loop {
         let metadata_path = current_path.join("package.yaml");
         dprintln!("{}", metadata_path.to_str().unwrap());
         if is_file_exists(metadata_path.to_str().unwrap()) {
-            return Ok(metadata_path.to_owned());
+            return Ok(current_path.to_owned());
         } else {
             dprintln!("Not found package.yaml");
             let next_path = current_path.parent();
@@ -21,6 +21,12 @@ pub fn get_path() -> Result<PathBuf, ()> {
                 current_path = next_path.unwrap();
             }
         }
+    }
+}
+pub fn get_path() -> Result<PathBuf, ()> {
+    match get_dir() {
+        Ok(dir) => Ok(dir.join("package.yaml")),
+        Err(()) => Err(()),
     }
 }
 pub fn metadata() -> Result<PackageData, ()> {
