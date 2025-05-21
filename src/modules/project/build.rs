@@ -1,5 +1,6 @@
 use super::metadata::{self, metadata};
 use crate::dprintln;
+use crate::modules::version::Version;
 use colored::Colorize;
 use std::fmt::{self, Display};
 use std::process::Command;
@@ -84,7 +85,7 @@ impl Display for BuildShell {
 }
 
 pub fn build(opts: BuildOptions) -> Result<(), String> {
-    dprintln!("{}", opts);
+    dprintln!("{}", &opts);
     let target_dir = metadata::get_path();
     let target_dir = match target_dir {
         Ok(path) => path,
@@ -97,9 +98,18 @@ pub fn build(opts: BuildOptions) -> Result<(), String> {
     let project_metadata = metadata().unwrap();
 
     // Configure build shell
-    fn setup_buildshell(cmd: &mut Command, target_dir: &std::path::Path, project_name: &str) {
+    fn setup_buildshell(
+        cmd: &mut Command,
+        target_dir: &std::path::Path,
+        project_name: &str,
+        project_version: &Version,
+        build_mode: &BuildMode,
+    ) {
+        let build_mode = build_mode.to_string();
         cmd.current_dir(target_dir)
-            .env("IPKG_PROJECT_NAME", project_name);
+            .env("IPKG_PACKAGE_NAME", project_name)
+            .env("IPKG_PACKAGE_VERSION", project_version.to_string())
+            .env("IPKG_BUILD_MODE", build_mode);
     }
 
     let mut build_process = match opts.build_shell {
@@ -116,6 +126,8 @@ pub fn build(opts: BuildOptions) -> Result<(), String> {
         &mut build_process,
         &target_dir,
         &project_metadata.about.package.name,
+        &project_metadata.about.package.version,
+        &opts.build_mode,
     );
 
     // Execute the build process and handle the result
