@@ -2,8 +2,8 @@ use super::version::{Version, VersionRange};
 use colored::Colorize;
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
-
-#[derive(Debug, Serialize, Deserialize)]
+pub mod depend;
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(default)]
 pub struct PackageData {
     pub about: AboutData,
@@ -11,7 +11,7 @@ pub struct PackageData {
     pub relation: RelationData,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone,Serialize, Deserialize)]
 #[serde(default)]
 #[derive(Default)]
 pub struct AboutData {
@@ -26,14 +26,14 @@ pub struct AuthorAboutData {
     pub email: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug,Clone, Serialize, Deserialize)]
 #[serde(default)]
 pub struct PackageAboutData {
     pub name: String,
     pub version: Version,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone,Serialize, Deserialize)]
 #[serde(default)]
 #[derive(Default)]
 pub struct RelationData {
@@ -50,7 +50,7 @@ pub struct RelationData {
     pub cmds: Vec<String>, // 依存コマンドのリスト
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone,Serialize, Deserialize)]
 #[serde(default)]
 pub struct DependPackageData {
     pub name: String,
