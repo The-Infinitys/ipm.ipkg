@@ -20,7 +20,7 @@ pub fn default() -> Result<(), Error> {
             content: include_str!("templates/default/src/main.sh").to_string(),
         },
         SetUpList {
-            path: String::from("ipkg/ipkg/scriptsbuild.sh"),
+            path: String::from("ipkg/scripts/build.sh"),
             content: include_str!("templates/default/ipkg/scripts/build.sh").to_string(),
         },
         SetUpList {
