@@ -13,7 +13,7 @@ pub struct DependencyResolver {
 #[derive(Debug)]
 pub enum DependencyError {
     CircularDependency(String),
-    VersionConflict(String, VersionRange, Version),
+    VersionConflict(String, Box<VersionRange>, Version),
     MissingDependency(String),
     CommandNotFound(String),
 }
@@ -24,14 +24,14 @@ impl fmt::Display for DependencyError {
             DependencyError::CircularDependency(pkg) => {
                 write!(f, "{}: {}", "Circular dependency".red().bold(), pkg)
             }
-            DependencyError::VersionConflict(pkg, range1, range2) => {
+            DependencyError::VersionConflict(pkg, range, version) => {
                 write!(
                     f,
                     "{}: {} ({} vs {})",
                     "Version conflict".red().bold(),
                     pkg,
-                    range1,
-                    range2
+                    range,
+                    version
                 )
             }
             DependencyError::MissingDependency(pkg) => {
@@ -41,6 +41,12 @@ impl fmt::Display for DependencyError {
                 write!(f, "{}: {}", "Command not found".red().bold(), cmd)
             }
         }
+    }
+}
+
+impl Default for DependencyResolver {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -133,7 +139,7 @@ impl DependencyResolver {
                 {
                     return Err(DependencyError::VersionConflict(
                         conflict.name.clone(),
-                        conflict.version.clone(),
+                        Box::new(conflict.version.clone()),
                         existing_pkg.about.package.version.clone(),
                     ));
                 }
@@ -411,7 +417,7 @@ mod tests {
             about: AboutData {
                 package: PackageAboutData {
                     name: "pkg-b".to_string(),
-                    version: Version::from_str("1.0.0").unwrap(),
+                    version: Version::from_str("1.1.0").unwrap(),
                 },
                 ..Default::default()
             },
