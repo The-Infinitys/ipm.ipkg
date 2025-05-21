@@ -1,4 +1,7 @@
-use crate::utils::shell::{self, ExitStatus, question};
+use crate::utils::{
+    self,
+    shell::{self, ExitStatus, question},
+};
 use build::BuildOptions;
 use cmd_arg::cmd_arg::Option;
 use std::{env, fs, str::FromStr};
@@ -121,10 +124,10 @@ fn project_create(args: Vec<&Option>) {
         params.project_template = ProjectTemplateType::Default;
     }
     if params.author.name.is_empty() {
-        params.author.name = question::kebab_loop("Author name: ");
+        params.author.name = shell::username();
     }
     if params.author.email.is_empty() {
-        params.author.email = question::email_loop("Author email: ");
+        params.author.email = utils::generate_email_address();
     }
     println!("{}", params);
     match fs::create_dir(&params.project_name) {

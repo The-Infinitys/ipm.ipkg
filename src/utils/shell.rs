@@ -2,6 +2,7 @@ use std::process::{ExitCode, Termination};
 pub mod question;
 use std::env;
 use std::path::Path;
+use std::process::{Command, Output};
 #[derive(Debug)]
 pub enum ExitStatus {
     Success = 0,
@@ -36,4 +37,28 @@ pub fn is_cmd_available(cmd: &str) -> bool {
         }
     }
     false
+}
+
+pub fn username() -> String {
+    let output: Output = Command::new("whoami")
+        .output()
+        .expect("failed to execute process");
+
+    if cfg!(target_os = "windows") {
+        let info: String = String::from_utf8(output.stdout).unwrap();
+        let username: &str = info.split("\\").collect::<Vec<&str>>()[1];
+        return String::from(username);
+    } else if cfg!(target_os = "linux") || cfg!(target_os = "macos") {
+        let username: String = String::from_utf8(output.stdout).unwrap();
+        return username;
+    } else {
+        panic!("Error");
+    }
+}
+pub fn hostname() -> String {
+    let output: Output = Command::new("hostname")
+        .output()
+        .expect("failed to execute process");
+    let hostname: String = String::from_utf8(output.stdout).unwrap().trim().to_owned();
+    hostname
 }
