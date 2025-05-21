@@ -82,7 +82,7 @@ fn project_create(args: Vec<&Option>) {
     };
     for arg in args {
         match arg.opt_str.as_str() {
-            "--project-name" => {
+            "--project-name" | "--name" | "--package-name" => {
                 if arg.opt_values.len() == 1 {
                     params.project_name = arg.opt_values.first().unwrap().to_owned();
                 }
