@@ -3,6 +3,7 @@ use crate::dprintln;
 use colored::Colorize;
 use std::fmt::{self, Display};
 use std::process::Command;
+use std::str::FromStr;
 
 #[derive(Default)]
 pub struct BuildOptions {
@@ -58,6 +59,18 @@ pub enum BuildShell {
     Zsh,
     Csh,
 }
+impl FromStr for BuildShell {
+    type Err = String;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_ascii_lowercase().as_str() {
+            "bash" => Ok(Self::Bash),
+            "zsh" => Ok(Self::Zsh),
+            "csh" => Ok(Self::Csh),
+            "rbash" => Ok(Self::RBash),
+            _ => Err(format!("Unavailable Shell: {}", s)),
+        }
+    }
+}
 
 impl Display for BuildShell {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -95,18 +108,9 @@ pub fn build(opts: BuildOptions) -> Result<(), String> {
             cmd.arg("-r");
             cmd
         }
-        BuildShell::Bash => {
-            let mut cmd = Command::new("bash");
-            cmd
-        }
-        BuildShell::Zsh => {
-            let mut cmd = Command::new("zsh");
-            cmd
-        }
-        BuildShell::Csh => {
-            let mut cmd = Command::new("csh");
-            cmd
-        }
+        BuildShell::Bash => Command::new("bash"),
+        BuildShell::Zsh => Command::new("zsh"),
+        BuildShell::Csh => Command::new("csh"),
     };
     setup_buildshell(
         &mut build_process,

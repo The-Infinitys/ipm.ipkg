@@ -1,7 +1,7 @@
 use crate::utils::shell::{self, ExitStatus, question};
 use build::BuildOptions;
 use cmd_arg::cmd_arg::Option;
-use std::{env, fs};
+use std::{env, fs, str::FromStr};
 mod build;
 mod create;
 mod metadata;
@@ -31,6 +31,22 @@ fn project_build(args: Vec<&Option>) {
             }
             "--debug" => {
                 build_options.build_mode = build::BuildMode::Debug;
+            }
+            "--shell" | "--sh" => {
+                if arg.opt_values.len() == 1 {
+                    let build_shell = &arg.opt_values.first().unwrap();
+
+                    let binding = build::BuildShell::from_str(build_shell);
+                    match binding {
+                        Ok(shell_opt) => {
+                            build_options.build_shell = shell_opt;
+                        }
+                        Err(e) => {
+                            eprintln!("Error: {}", e);
+                            shell::exit(ExitStatus::Failure);
+                        }
+                    };
+                }
             }
             _ => messages::unknown(),
         }
