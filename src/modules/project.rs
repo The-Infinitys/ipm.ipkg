@@ -3,14 +3,21 @@ use crate::utils::{
     shell::{self, ExitStatus, question},
 };
 use build::BuildOptions;
+use install::InstallOptions; // Import InstallOptions
+use remove::RemoveOptions; // Import RemoveOptions
+use purge::PurgeOptions; // Import PurgeOptions
 use cmd_arg::cmd_arg::Option;
 use std::{env, fs, str::FromStr};
 mod build;
 mod create;
+mod install;
+mod remove;
+mod purge;
 mod metadata;
 use super::messages;
 use super::pkg::AuthorAboutData;
 use create::{ProjectParams, ProjectTemplateType};
+
 pub fn project(args: Vec<&Option>) {
     if args.is_empty() {
         messages::unknown();
@@ -22,9 +29,13 @@ pub fn project(args: Vec<&Option>) {
         "create" | "new" => project_create(sub_args),
         "info" | "metadata" => project_metadata(),
         "build" | "compile" => project_build(sub_args),
+        "install" => project_install(sub_args), // Added install command
+        "remove" => project_remove(sub_args),   // Added remove command
+        "purge" => project_purge(sub_args),     // Added purge command
         _ => messages::unknown(),
     }
 }
+
 fn project_build(args: Vec<&Option>) {
     let mut build_options: build::BuildOptions = BuildOptions::default();
     for arg in args {
@@ -66,6 +77,123 @@ fn project_build(args: Vec<&Option>) {
         }
     }
 }
+
+// ---
+// ## Project Install Function
+fn project_install(args: Vec<&Option>) {
+    let mut install_options: install::InstallOptions = InstallOptions::default();
+    for arg in args {
+        match arg.opt_str.as_str() {
+            "--shell" | "--sh" => {
+                if arg.opt_values.len() == 1 {
+                    let build_shell = &arg.opt_values.first().unwrap();
+
+                    let binding = install::InstallShell::from_str(build_shell);
+                    match binding {
+                        Ok(shell_opt) => {
+                            install_options.install_shell = shell_opt;
+                        }
+                        Err(e) => {
+                            eprintln!("Error: {}", e);
+                            shell::exit(ExitStatus::Failure);
+                        }
+                    };
+                }
+            }
+            _ => {
+                eprintln!("Unknown Option: {}", arg.opt_str);
+                eprintln!("Available Options: --release, --debug ,--shell|--sh");
+                messages::unknown();
+            }
+        }
+    }
+    match install::install(install_options) {
+        Ok(()) => shell::exit(ExitStatus::Success),
+        Err(msg) => {
+            eprintln!("Error: {}", msg);
+            shell::exit(ExitStatus::Failure);
+        }
+    }
+}
+
+// ---
+// ## Project Remove Function
+fn project_remove(args: Vec<&Option>) {
+    let mut remove_options: remove::RemoveOptions = RemoveOptions::default();
+    for arg in args {
+        match arg.opt_str.as_str() {
+            "--shell" | "--sh" => {
+                if arg.opt_values.len() == 1 {
+                    let build_shell = &arg.opt_values.first().unwrap();
+
+                    let binding = remove::RemoveShell::from_str(build_shell);
+                    match binding {
+                        Ok(shell_opt) => {
+                            remove_options.remove_shell = shell_opt;
+                        }
+                        Err(e) => {
+                            eprintln!("Error: {}", e);
+                            shell::exit(ExitStatus::Failure);
+                        }
+                    };
+                }
+            }
+            _ => {
+                eprintln!("Unknown Option: {}", arg.opt_str);
+                eprintln!("Available Options: --shell|--sh");
+                messages::unknown();
+            }
+        }
+    }
+    match remove::remove(remove_options) {
+        Ok(()) => shell::exit(ExitStatus::Success),
+        Err(msg) => {
+            eprintln!("Error: {}", msg);
+            shell::exit(ExitStatus::Failure);
+        }
+    }
+}
+
+// ---
+// ## Project Purge Function
+fn project_purge(args: Vec<&Option>) {
+    let mut purge_options: purge::PurgeOptions = PurgeOptions::default();
+    for arg in args {
+        match arg.opt_str.as_str() {
+            "--shell" | "--sh" => {
+                if arg.opt_values.len() == 1 {
+                    let build_shell = &arg.opt_values.first().unwrap();
+
+                    let binding = purge::PurgeShell::from_str(build_shell);
+                    match binding {
+                        Ok(shell_opt) => {
+                            purge_options.purge_shell = shell_opt;
+                        }
+                        Err(e) => {
+                            eprintln!("Error: {}", e);
+                            shell::exit(ExitStatus::Failure);
+                        }
+                    };
+                }
+            }
+            _ => {
+                eprintln!("Unknown Option: {}", arg.opt_str);
+                eprintln!("Available Options: --shell|--sh");
+                messages::unknown();
+            }
+        }
+    }
+    match purge::purge(purge_options) {
+        Ok(()) => shell::exit(ExitStatus::Success),
+        Err(msg) => {
+            eprintln!("Error: {}", msg);
+            shell::exit(ExitStatus::Failure);
+        }
+    }
+}
+
+// ---
+// ## Project Metadata Function
 fn project_metadata() {
     if metadata::show_metadata().is_err() {
         eprintln!("Error: failed to get metadata");
@@ -74,6 +202,8 @@ fn project_metadata() {
     shell::exit(ExitStatus::Success);
 }
 
+// ---
+// ## Project Create Function
 fn project_create(args: Vec<&Option>) {
     let mut params = ProjectParams {
         project_name: String::new(),
