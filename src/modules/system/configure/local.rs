@@ -53,7 +53,10 @@ pub fn configure() -> Result<(), Error> {
         let path_export = format!("\nexport PATH=\"$PATH:{}\"", ipkg_bin_path);
         let append_result = file_creation(&profile_path, &path_export);
         match append_result {
-            Ok(()) => println!("Added {} to PATH in .profile", ipkg_bin_path),
+            Ok(()) => {
+                println!("Added {} to PATH in {}", ipkg_bin_path, profile_path);
+                println!("Maybe you have to add PATH manually")
+            }
             Err(e) => {
                 if e.kind() != ErrorKind::AlreadyExists {
                     return Err(Error::new(

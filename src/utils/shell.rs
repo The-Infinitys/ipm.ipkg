@@ -64,7 +64,10 @@ pub fn hostname() -> String {
 }
 
 pub fn shell_type() -> String {
-    env::var("SHELL")
-        .unwrap_or("unknown".to_string())
-        .to_string()
+    Path::new(&env::var("SHELL").unwrap_or("unknown".to_string()))
+        .file_name()
+        .unwrap()
+        .to_owned()
+        .into_string()
+        .unwrap()
 }
