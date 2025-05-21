@@ -3,7 +3,7 @@ use thiserror::Error;
 mod templates;
 use super::super::pkg::AuthorAboutData;
 use super::super::pkg::PackageData;
-use crate::utils::files::{dir_creation, file_creation};
+use crate::utils::files::file_creation;
 use std::fmt::{self, Display, Formatter};
 #[derive(PartialEq, Eq)]
 pub enum ProjectTemplateType {
@@ -45,7 +45,6 @@ pub fn create(params: &ProjectParams) -> Result<(), ProjectCreationError> {
     // std::fs::write が返す std::io::Error は
     // ProjectCreationError::IoError に自動変換されます ('?' 演算子と #[from] 属性のおかげ)
     file_creation(project_data_filename, &data)?;
-    dir_creation("scripts")?;
     match params.project_template {
         ProjectTemplateType::Default => match templates::default() {
             Ok(()) => Ok(()),
