@@ -3,17 +3,17 @@ use crate::utils::{
     shell::{self, ExitStatus, question},
 };
 use build::BuildOptions;
-use install::InstallOptions; // Import InstallOptions
-use remove::RemoveOptions; // Import RemoveOptions
-use purge::PurgeOptions; // Import PurgeOptions
 use cmd_arg::cmd_arg::Option;
+use install::InstallOptions; // Import InstallOptions
+use purge::PurgeOptions; // Import PurgeOptions
+use remove::RemoveOptions; // Import RemoveOptions
 use std::{env, fs, str::FromStr};
 mod build;
 mod create;
 mod install;
-mod remove;
-mod purge;
 mod metadata;
+mod purge;
+mod remove;
 use super::messages;
 use super::pkg::AuthorAboutData;
 use create::{ProjectParams, ProjectTemplateType};
