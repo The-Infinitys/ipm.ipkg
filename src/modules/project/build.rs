@@ -1,34 +1,62 @@
+use colored::Colorize;
+use std::fmt::{self, Display};
+
+#[derive(Default)]
 pub struct BuildOptions {
     pub build_mode: BuildMode,
     pub build_shell: BuildShell,
 }
-impl Default for BuildOptions {
-    fn default() -> Self {
-        BuildOptions {
-            build_mode: BuildMode::default(),
-            build_shell: BuildShell::default(),
+impl Display for BuildOptions {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let lines = [
+            format!("{}{}", "Build Options".cyan().bold(), ":"),
+            format!(
+                "  {}{} {}",
+                "build-mode".green().bold(),
+                ":",
+                self.build_mode
+            ),
+            format!(
+                "  {}{} {}",
+                "build-shell".green().bold(),
+                ":",
+                self.build_shell
+            ),
+        ];
+        for line in lines {
+            writeln!(f, "{}", line)?;
+        }
+        Ok(())
+    }
+}
+
+#[derive(Default)]
+pub enum BuildMode {
+    Release,
+    #[default]
+    Debug,
+}
+impl Display for BuildMode {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            BuildMode::Release => write!(f, "release"),
+            BuildMode::Debug => write!(f, "debug"),
         }
     }
 }
-impl Display for Bu
-pub enum BuildMode {
-    Release,
-    Debug,
-}
-impl Default for BuildMode {
-    fn default() -> Self {
-        BuildMode::Debug
-    }
-}
+#[derive(Default)]
 pub enum BuildShell {
+    #[default]
     RBash,
 }
-impl Default for BuildShell {
-    fn default() -> Self {
-        BuildShell::RBash
+impl Display for BuildShell {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            BuildShell::RBash => write!(f, "restricted bash"),
+        }
     }
 }
 pub fn build(opts: BuildOptions) -> Result<(), String> {
-    println!("{:#?}", opts);
+    println!("{}", opts);
     Ok(())
 }

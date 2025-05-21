@@ -23,9 +23,17 @@ pub fn project(args: Vec<&Option>) {
     }
 }
 fn project_build(args: Vec<&Option>) {
-    let build_options: build::BuildOptions = BuildOptions::default();
+    let mut build_options: build::BuildOptions = BuildOptions::default();
     for arg in args {
-        println!("{:#?}", arg);
+        match arg.opt_str.as_str() {
+            "--release" => {
+                build_options.build_mode = build::BuildMode::Release;
+            }
+            "--debug" => {
+                build_options.build_mode = build::BuildMode::Debug;
+            }
+            _ => messages::unknown(),
+        }
     }
     match build::build(build_options) {
         Ok(()) => shell::exit(ExitStatus::Success),
