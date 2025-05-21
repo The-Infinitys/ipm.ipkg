@@ -138,7 +138,12 @@ impl Display for PackageData {
         if !self.relation.virtuals.is_empty() {
             writeln!(f, "\n{}", "Virtual Packages:".bold())?;
             for virtual_pkg in &self.relation.virtuals {
-                writeln!(f, "  - {} ({})", virtual_pkg.name.red(), virtual_pkg.version)?;
+                writeln!(
+                    f,
+                    "  - {} ({})",
+                    virtual_pkg.name.red(),
+                    virtual_pkg.version
+                )?;
             }
         }
         Ok(())
