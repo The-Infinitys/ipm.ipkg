@@ -47,10 +47,10 @@ pub fn username() -> String {
     if cfg!(target_os = "windows") {
         let info: String = String::from_utf8(output.stdout).unwrap();
         let username: &str = info.split("\\").collect::<Vec<&str>>()[1];
-        return String::from(username);
+        String::from(username)
     } else if cfg!(target_os = "linux") || cfg!(target_os = "macos") {
         let username: String = String::from_utf8(output.stdout).unwrap();
-        return username;
+        username
     } else {
         panic!("Error");
     }
