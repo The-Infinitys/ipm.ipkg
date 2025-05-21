@@ -1,20 +1,13 @@
 use crate::utils::shell;
 use std::env;
 use std::path::PathBuf; // PathBufを追加
-use std::process; // エラーハンドリングのために追加
-
-pub fn package_list() -> PathBuf {
+pub fn packageslist_filepath() -> PathBuf {
     // 戻り値をPathBufに変更
     let home_path_str = env::var("HOME").unwrap_or_else(|_| {
         // unwrap_or_elseを使用
         // HOME環境変数が設定されていない場合
         eprintln!("Error: HOME environment variable not set. Attempting to use username.");
-        let username = shell::username(); // shell::username()が失敗する可能性を考慮
-        if username.is_empty() {
-            // usernameが空の場合のハンドリング
-            eprintln!("Error: Could not determine username. Exiting.");
-            process::exit(1); // プログラムを終了
-        }
+        let username = shell::username(); 
         format!("/home/{}", username)
     });
 
