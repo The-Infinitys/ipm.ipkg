@@ -100,9 +100,15 @@ fn project_install(args: Vec<&Option>) {
                     };
                 }
             }
+            "--local" => {
+                install_options.install_mode = install::InstallMode::Local;
+            }
+            "--global" => {
+                install_options.install_mode = install::InstallMode::Global;
+            }
             _ => {
                 eprintln!("Unknown Option: {}", arg.opt_str);
-                eprintln!("Available Options: --release, --debug ,--shell|--sh");
+                eprintln!("Available Options: --global, --local ,--shell|--sh");
                 messages::unknown();
             }
         }
