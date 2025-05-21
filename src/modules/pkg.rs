@@ -47,6 +47,7 @@ pub struct RelationData {
     pub conflicts: Vec<DependPackageData>, // 競合パッケージのリスト
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub virtuals: Vec<DependPackageData>,
+    pub cmds: Vec<String>, // 依存コマンドのリスト
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -93,6 +94,12 @@ impl Display for PackageData {
             }
         }
 
+        if !self.relation.cmds.is_empty() {
+            writeln!(f, "\n{}", "Necessary Commands:".bold())?;
+            for cmd in &self.relation.cmds {
+                writeln!(f, "  - {}", cmd.green(),)?;
+            }
+        }
         // サジェストの表示 (追加部分)
         if !self.relation.suggests.is_empty() {
             writeln!(f, "\n{}", "Suggests:".bold())?;
@@ -141,7 +148,7 @@ impl Display for PackageData {
                 writeln!(
                     f,
                     "  - {} ({})",
-                    virtual_pkg.name.red(),
+                    virtual_pkg.name.purple(),
                     virtual_pkg.version
                 )?;
             }
@@ -169,6 +176,7 @@ impl Default for PackageData {
                 recommends: Vec::new(),
                 conflicts: Vec::new(),
                 virtuals: Vec::new(),
+                cmds: Vec::new(),
             },
         }
     }
@@ -181,6 +189,7 @@ impl RelationData {
             && self.suggests.is_empty()
             && self.recommends.is_empty()
             && self.conflicts.is_empty()
+            && self.cmds.is_empty()
     }
 }
 
