@@ -1,10 +1,10 @@
+use super::ExecShell;
 use super::metadata::{self, metadata};
 use crate::dprintln;
 use crate::modules::version::Version;
 use colored::Colorize;
 use std::fmt::{self, Display};
 use std::process::Command;
-use std::str::FromStr;
 
 #[derive(Default)]
 pub struct BuildOptions {
@@ -52,38 +52,6 @@ impl Display for BuildMode {
     }
 }
 
-#[derive(Default)]
-pub enum ExecShell {
-    #[default]
-    RBash,
-    Bash,
-    Zsh,
-    Csh,
-}
-impl FromStr for ExecShell {
-    type Err = String;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s.to_ascii_lowercase().as_str() {
-            "bash" => Ok(Self::Bash),
-            "zsh" => Ok(Self::Zsh),
-            "csh" => Ok(Self::Csh),
-            "rbash" => Ok(Self::RBash),
-            _ => Err(format!("Unavailable Shell: {}", s)),
-        }
-    }
-}
-
-impl Display for ExecShell {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            ExecShell::RBash => write!(f, "restricted bash"),
-            ExecShell::Bash => write!(f, "bash"),
-            ExecShell::Zsh => write!(f, "zsh"),
-            ExecShell::Csh => write!(f, "csh"),
-        }
-    }
-}
-
 pub fn build(opts: BuildOptions) -> Result<(), String> {
     dprintln!("{}", &opts);
     let target_dir = metadata::get_dir();
@@ -113,16 +81,7 @@ pub fn build(opts: BuildOptions) -> Result<(), String> {
             .arg("ipkg/scripts/build.sh");
     }
 
-    let mut build_process = match opts.build_shell {
-        ExecShell::RBash => {
-            let mut cmd = Command::new("bash");
-            cmd.arg("-r");
-            cmd
-        }
-        ExecShell::Bash => Command::new("bash"),
-        ExecShell::Zsh => Command::new("zsh"),
-        ExecShell::Csh => Command::new("csh"),
-    };
+    let mut build_process = opts.build_shell.generate();
     setup_execshell(
         &mut build_process,
         &target_dir,

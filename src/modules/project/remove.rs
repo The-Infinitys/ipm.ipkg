@@ -55,16 +55,7 @@ pub fn remove(opts: RemoveOptions) -> Result<(), String> {
             .arg("ipkg/scripts/remove.sh");
     }
 
-    let mut remove_process = match opts.remove_shell {
-        ExecShell::RBash => {
-            let mut cmd = Command::new("bash");
-            cmd.arg("-r");
-            cmd
-        }
-        ExecShell::Bash => Command::new("bash"),
-        ExecShell::Zsh => Command::new("zsh"),
-        ExecShell::Csh => Command::new("csh"),
-    };
+    let mut remove_process = opts.remove_shell.generate();
     setup_execshell(
         &mut remove_process,
         &target_dir,

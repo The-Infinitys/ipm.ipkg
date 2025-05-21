@@ -54,16 +54,7 @@ pub fn purge(opts: PurgeOptions) -> Result<(), String> {
             .arg("ipkg/scripts/purge.sh");
     }
 
-    let mut purge_process = match opts.purge_shell {
-        ExecShell::RBash => {
-            let mut cmd = Command::new("bash");
-            cmd.arg("-r");
-            cmd
-        }
-        ExecShell::Bash => Command::new("bash"),
-        ExecShell::Zsh => Command::new("zsh"),
-        ExecShell::Csh => Command::new("csh"),
-    };
+    let mut purge_process = opts.purge_shell.generate();
     setup_execshell(
         &mut purge_process,
         &target_dir,

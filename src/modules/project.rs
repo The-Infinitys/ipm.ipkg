@@ -19,6 +19,7 @@ use super::messages;
 use super::pkg::AuthorAboutData;
 use create::{ProjectParams, ProjectTemplateType};
 use std::fmt::{self, Display};
+use std::process::Command;
 #[derive(Default)]
 pub enum ExecShell {
     #[default]
@@ -39,7 +40,20 @@ impl FromStr for ExecShell {
         }
     }
 }
-
+impl ExecShell {
+    fn generate(&self) -> Command {
+        match self {
+            Self::RBash => {
+                let mut cmd = Command::new("bash");
+                cmd.arg("-r");
+                cmd
+            }
+            Self::Bash => Command::new("bash"),
+            Self::Zsh => Command::new("zsh"),
+            Self::Csh => Command::new("csh"),
+        }
+    }
+}
 impl Display for ExecShell {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -113,7 +127,7 @@ fn project_build(args: Vec<&Option>) {
                 if arg.opt_values.len() == 1 {
                     let build_shell = &arg.opt_values.first().unwrap();
 
-                    let binding = build::ExecShell::from_str(build_shell);
+                    let binding = ExecShell::from_str(build_shell);
                     match binding {
                         Ok(shell_opt) => {
                             build_options.build_shell = shell_opt;
@@ -151,7 +165,7 @@ fn project_install(args: Vec<&Option>) {
                 if arg.opt_values.len() == 1 {
                     let build_shell = &arg.opt_values.first().unwrap();
 
-                    let binding = install::ExecShell::from_str(build_shell);
+                    let binding = ExecShell::from_str(build_shell);
                     match binding {
                         Ok(shell_opt) => {
                             install_options.install_shell = shell_opt;
