@@ -11,6 +11,7 @@ use super::messages;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(default)]
+#[derive(Default)]
 pub struct PackageData {
     pub about: AboutData,
     #[serde(skip_serializing_if = "RelationData::is_empty")]
@@ -19,6 +20,7 @@ pub struct PackageData {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(default)]
+#[derive(Default)]
 pub struct AboutData {
     pub author: AuthorAboutData,
     pub package: PackageAboutData,
@@ -40,6 +42,7 @@ pub struct PackageAboutData {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(default)]
+#[derive(Default)]
 pub struct RelationData {
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub depend: Vec<Vec<PackageRange>>,
@@ -283,23 +286,7 @@ impl Display for PackageVersion {
     }
 }
 
-impl Default for PackageData {
-    fn default() -> Self {
-        PackageData {
-            about: AboutData::default(),
-            relation: RelationData::default(),
-        }
-    }
-}
 
-impl Default for AboutData {
-    fn default() -> Self {
-        AboutData {
-            author: AuthorAboutData::default(),
-            package: PackageAboutData::default(),
-        }
-    }
-}
 
 impl Default for AuthorAboutData {
     fn default() -> Self {
@@ -319,19 +306,6 @@ impl Default for PackageAboutData {
     }
 }
 
-impl Default for RelationData {
-    fn default() -> Self {
-        RelationData {
-            depend: Vec::new(),
-            depend_cmds: Vec::new(),
-            suggests: Vec::new(),
-            recommends: Vec::new(),
-            conflicts: Vec::new(),
-            virtuals: Vec::new(),
-            provide_cmds: Vec::new(),
-        }
-    }
-}
 
 impl Default for PackageRange {
     fn default() -> Self {
