@@ -14,12 +14,11 @@ pub struct RemoveOptions {
 impl Display for RemoveOptions {
     /// `RemoveOptions` をフォーマットして表示します。
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        writeln!(f, "{}{}", "Remove Options".cyan().bold(), ":")?;
+        writeln!(f, "{}:", "Remove Options".cyan().bold())?;
         writeln!(
             f,
-            "  {}{} {}",
+            "  {}: {}",
             "remove-shell".green().bold(),
-            ":",
             self.remove_shell
         )?;
         Ok(())

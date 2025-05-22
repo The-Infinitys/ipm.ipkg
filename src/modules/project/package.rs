@@ -55,13 +55,12 @@ impl FromStr for PackageTarget {
 impl Display for PackageOptions {
     /// Formats the `PackageOptions` for display, including the target and shell.
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        writeln!(f, "{}{}", "Package Options".cyan().bold(), ":")?;
-        writeln!(f, "  {}{} {}", "target".green().bold(), ":", self.target)?;
+        writeln!(f, "{}:", "Package Options".cyan().bold())?;
+        writeln!(f, "  {}: {}", "target".green().bold(), self.target)?;
         writeln!(
             f,
-            "  {}{} {}",
+            "  {}: {}",
             "package-shell".green().bold(),
-            ":",
             self.package_shell
         )?;
         Ok(())

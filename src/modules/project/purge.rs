@@ -14,12 +14,11 @@ pub struct PurgeOptions {
 impl Display for PurgeOptions {
     /// PurgeOptions の内容を整形して表示します。
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        writeln!(f, "{}{}", "Purge Options".cyan().bold(), ":")?;
+        writeln!(f, "{}:", "Purge Options".cyan().bold())?;
         writeln!(
             f,
-            "  {}{} {}",
+            "  {}: {}",
             "purge-shell".green().bold(),
-            ":",
             self.purge_shell
         )?;
         Ok(())
