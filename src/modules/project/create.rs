@@ -2,25 +2,33 @@ use std::io;
 use std::str::FromStr;
 use thiserror::Error;
 mod templates;
-use super::super::pkg::AuthorAboutData;
-use super::super::pkg::PackageData;
+use super::super::pkg::{AuthorAboutData, PackageData}; // 複数のアイテムを一行でインポート
 use crate::utils::files::file_creation;
 use std::fmt::{self, Display, Formatter};
-#[derive(PartialEq, Eq)]
+
+/// プロジェクトテンプレートのタイプを定義します。
+#[derive(PartialEq, Eq, Default)] // Default を追加して、ProjectParams のデフォルト実装を容易にする
 pub enum ProjectTemplateType {
+    #[default] // Default トレイトの実装でデフォルトを Default に設定
     Default,
     Rust,
 }
+
 impl FromStr for ProjectTemplateType {
     type Err = String;
+
+    /// 文字列から `ProjectTemplateType` をパースします。
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_ascii_lowercase().as_str() {
             "default" => Ok(Self::Default),
             "rust" => Ok(Self::Rust),
-            _ => Err(format!("Unavailable Template: {}", s)),
+            _ => Err(format!("Unavailable Template: '{}'", s)),
         }
     }
 }
+
+/// 新しいプロジェクト作成のためのパラメータを保持します。
+#[derive(Default)] // Default を追加して、ProjectParams のデフォルト実装を容易にする
 pub struct ProjectParams {
     pub project_name: String,
     pub project_template: ProjectTemplateType,
@@ -28,40 +36,64 @@ pub struct ProjectParams {
 }
 
 impl Display for ProjectParams {
+    /// `ProjectParams` の内容を整形して表示します。
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        let template = match self.project_template {
+        let template_str = match self.project_template {
             ProjectTemplateType::Default => "default",
             ProjectTemplateType::Rust => "rust",
         };
-        write!(f, "Project: {}\nTemplate: {}", self.project_name, template)
+        write!(
+            f,
+            "Project: {}\nTemplate: {}\nAuthor: {} <{}>", // Author 情報も表示に追加
+            self.project_name, template_str, self.author.name, self.author.email
+        )
     }
 }
 
+/// プロジェクト作成中に発生する可能性のあるエラーを定義します。
 #[derive(Debug, Error)]
 pub enum ProjectCreationError {
-    #[error("YAML serialization error: {0}")]
+    /// YAMLのシリアライズまたはデシリアライズエラー。
+    #[error("YAML serialization/deserialization error: {0}")]
     YamlError(#[from] serde_yaml::Error),
+    /// I/O関連のエラー。
     #[error("I/O error: {0}")]
     IoError(#[from] io::Error),
+    /// テンプレート固有の作成エラー。
+    #[error("Template creation error: {0}")]
+    TemplateError(String), // String でエラーメッセージを保持
 }
 
-// 関数の戻り値型を Result<(), ()> から Result<(), ProjectCreationError> に変更します
+/// 新しいプロジェクトを初期化し、必要なファイルを生成します。
+///
+/// この関数は、`project_data.yaml` ファイルを作成し、選択されたテンプレートに基づいて
+/// その他のプロジェクト構造を生成します。
+///
+/// # 引数
+/// * `params`: 作成するプロジェクトのパラメータ (`ProjectParams` への参照)。
+///
+/// # 戻り値
+/// プロジェクト作成の成否を示す `Result<(), ProjectCreationError>`。
 pub fn create(params: &ProjectParams) -> Result<(), ProjectCreationError> {
+    // PackageData の初期化と設定
     let mut project_data = PackageData::default();
-    project_data.about.package.name = params.project_name.to_string();
+    project_data.about.package.name = params.project_name.clone(); // to_string() は不要、clone() で十分
     project_data.about.author = params.author.clone();
+
+    // package.yaml の作成
     let project_data_filename = "package.yaml";
-    let data = serde_yaml::to_string(&project_data)?;
-    file_creation(project_data_filename, &data)?;
-    let creation_result = match params.project_template {
-        ProjectTemplateType::Default => templates::default(),
-        ProjectTemplateType::Rust => templates::rust(),
-    };
-    match creation_result {
-        Ok(()) => Ok(()),
-        Err(e) => {
-            eprintln!("Error: {}", e);
-            Err(ProjectCreationError::IoError(e))
-        }
-    }
+    let data = serde_yaml::to_string(&project_data)?; // YamlError を自動変換
+
+    // file_creation は Result<Result<(), io::Error>, ...> を返す可能性があるので注意
+    // ここでは file_creation が直接 io::Result を返すことを想定
+    file_creation(project_data_filename, &data)
+        .map_err(|e| ProjectCreationError::IoError(e))?; // io::Error を ProjectCreationError::IoError にマップ
+
+    // テンプレートに基づくファイル生成
+    match params.project_template {
+        ProjectTemplateType::Default => templates::default().map_err(|e| ProjectCreationError::TemplateError(e.to_string())),
+        ProjectTemplateType::Rust => templates::rust().map_err(|e| ProjectCreationError::TemplateError(e.to_string())),
+    }?; // ここで ? 演算子を使用し、エラーを自動伝播
+    
+    Ok(())
 }

@@ -137,7 +137,7 @@ fn show_help(help_type: HelpType) {
 pub fn unknown() -> Result<(), std::io::Error> {
     eprintln!("unknown command:\n  {}", cmd_str());
     Err(std::io::Error::new(
-        std::io::ErrorKind::Other,
-        "unknown command",
+        std::io::ErrorKind::InvalidInput,
+        "No subcommand provided",
     ))
 }

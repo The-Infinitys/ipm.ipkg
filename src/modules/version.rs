@@ -29,6 +29,7 @@ impl Default for Version {
     /// デフォルトは "1.0.0" です。パースに失敗することはないと仮定しています。
     fn default() -> Self {
         // デフォルトの "1.0.0" は有効なバージョン文字列としてFromStrでパースされるはずです。
+        // ここでのunwrapは、この文字列が常に有効であることを保証するため、許容されます。
         Version::from_str("1.0.0").unwrap()
     }
 }
@@ -66,41 +67,37 @@ impl<'de> Deserialize<'de> for Version {
 fn serialize_version_str(version_str: &str) -> (Vec<u32>, Vec<String>) {
     let mut numbers = Vec::new();
     let mut separators = Vec::new();
-    let mut current_num = String::new();
-    let mut current_sep = String::new();
+    let mut current_segment = String::new();
+    let mut is_digit_segment = true; // 現在のセグメントが数字の連続であるか
 
     for c in version_str.chars() {
         if c.is_ascii_digit() {
-            // 区切り文字のシーケンスが終わった場合、追加
-            if !current_sep.is_empty() {
-                // Efficiency: Move the string instead of cloning
-                separators.push(current_sep);
-                current_sep = String::new(); // Create a new empty string for the next separator
+            if !is_digit_segment {
+                // 非数字のシーケンスが終わった場合、区切り文字として追加
+                separators.push(std::mem::take(&mut current_segment)); // 所有権を移動
+                is_digit_segment = true;
             }
-            // 数字を蓄積
-            current_num.push(c);
+            current_segment.push(c);
         } else {
-            // 数字のシーケンスが終わった場合、追加
-            if !current_num.is_empty() {
-                if let Ok(num) = current_num.parse::<u32>() {
+            if is_digit_segment {
+                // 数字のシーケンスが終わった場合、数値として追加
+                if let Ok(num) = current_segment.parse::<u32>() {
                     numbers.push(num);
                 }
-                current_num.clear();
+                std::mem::take(&mut current_segment); // クリア
+                is_digit_segment = false;
             }
-            // 非数字を蓄積
-            current_sep.push(c);
+            current_segment.push(c);
         }
     }
 
-    // 残りの数字または区切り文字を追加
-    if !current_num.is_empty() {
-        if let Ok(num) = current_num.parse::<u32>() {
+    // ループ終了後に残りのセグメントを追加
+    if is_digit_segment {
+        if let Ok(num) = current_segment.parse::<u32>() {
             numbers.push(num);
         }
-    }
-    if !current_sep.is_empty() {
-        // Efficiency: Move the last separator string
-        separators.push(current_sep);
+    } else {
+        separators.push(current_segment); // 最後の区切り文字をムーブ
     }
 
     (numbers, separators)
@@ -142,7 +139,7 @@ impl Version {
     ///
     /// # 引数
     ///
-    /// * `range_data`: 現在のバージョン範囲データを含む`Option`。`None` の場合は何もしません。
+    /// * `range_data_opt`: 現在のバージョン範囲データを含む`Option`。`None` の場合は何もしません。
     /// * `insert_type`: 挿入するバージョンの関係性タイプ（>, >=, =, <=, <）。
     ///
     /// # 戻り値
@@ -150,102 +147,126 @@ impl Version {
     /// 更新されたバージョン範囲データを含む`Option`。挿入により範囲が無効になった場合は`None`。
     fn insert_to_range_data(
         &self,
-        range_data: Option<RangeData>,
+        range_data_opt: Option<RangeData>,
         insert_type: VersionRangeInsertType,
     ) -> Option<RangeData> {
-        range_data.map(|mut range_data| match insert_type {
+        let mut range_data = range_data_opt?; // Noneの場合は早期リターン
+
+        match insert_type {
             VersionRangeInsertType::StrictlyEarlier => {
+                // 矛盾チェック:
+                // == self以上、>= self以上、> self以上は矛盾
                 if range_data.exactly_equal.as_ref().is_some_and(|v| v >= self)
-                    || range_data
-                        .later_or_equal
-                        .as_ref()
-                        .is_some_and(|v| v >= self)
-                    || range_data
-                        .strictly_later
-                        .as_ref()
-                        .is_some_and(|v| v >= self)
+                    || range_data.later_or_equal.as_ref().is_some_and(|v| v >= self)
+                    || range_data.strictly_later.as_ref().is_some_and(|v| v >= self)
                 {
                     return None;
                 }
-                if let Some(check_ver) = &range_data.earlier_or_equal {
-                    if check_ver >= self {
-                        range_data.earlier_or_equal = None;
-                        range_data.strictly_earlier = Some(self.clone());
+                // 更新ロジック:
+                // <= の既存値があれば、self より大きい場合は更新しない。self より小さい場合は self に更新
+                // < の既存値があれば、self より大きい場合は更新しない。self より小さい場合は self に更新
+                // なければ self を設定
+                if let Some(ref mut current_earlier_or_equal) = range_data.earlier_or_equal {
+                    if *current_earlier_or_equal >= *self { // <= が >= self なら、<= self に置き換える
+                        *current_earlier_or_equal = self.clone();
                     }
-                }
-                if let Some(check_ver) = &range_data.strictly_earlier {
-                    if check_ver > self {
-                        range_data.strictly_earlier = Some(self.clone());
+                } else if let Some(ref mut current_strictly_earlier) = range_data.strictly_earlier {
+                    if *current_strictly_earlier > *self { // < が > self なら、< self に置き換える
+                        *current_strictly_earlier = self.clone();
                     }
+                } else {
+                    range_data.strictly_earlier = Some(self.clone());
                 }
-                Some(range_data)
             }
             VersionRangeInsertType::EarlierOrEqual => {
+                // 矛盾チェック:
+                // == selfより大きい、> selfより大きいは矛盾
                 if range_data.exactly_equal.as_ref().is_some_and(|v| v > self)
-                    || range_data.later_or_equal.as_ref().is_some_and(|v| v > self)
                     || range_data.strictly_later.as_ref().is_some_and(|v| v > self)
                 {
                     return None;
                 }
-                if let Some(check_ver) = &range_data.earlier_or_equal {
-                    if check_ver > self {
-                        range_data.earlier_or_equal = Some(self.clone());
+                // 更新ロジック:
+                // <= の既存値があれば、self より大きい場合は更新しない。self より小さい場合は self に更新
+                // なければ self を設定
+                if let Some(ref mut current_earlier_or_equal) = range_data.earlier_or_equal {
+                    if *current_earlier_or_equal > *self { // 既存の <= が self よりも大きいなら、selfに更新
+                        *current_earlier_or_equal = self.clone();
                     }
                 } else {
                     range_data.earlier_or_equal = Some(self.clone());
                 }
-                Some(range_data)
             }
             VersionRangeInsertType::ExactlyEqual => {
+                // 矛盾チェック:
+                // 既に == が存在し、それがselfと異なる場合
                 if range_data.exactly_equal.as_ref().is_some_and(|v| v != self) {
                     return None;
                 }
-                range_data.exactly_equal = Some(self.clone());
-                Some(range_data)
-            }
-            VersionRangeInsertType::LaterOrEqual => {
-                if range_data.exactly_equal.as_ref().is_some_and(|v| v < self)
-                    || range_data
-                        .strictly_earlier
-                        .as_ref()
-                        .is_some_and(|v| v < self)
+                // other制約との矛盾チェック:
+                // < self、<= self-epsilon は矛盾
+                if range_data.strictly_earlier.as_ref().is_some_and(|v| v <= self) ||
+                   range_data.earlier_or_equal.as_ref().is_some_and(|v| v < self) ||
+                   // > self、>= self+epsilon は矛盾
+                   range_data.strictly_later.as_ref().is_some_and(|v| v >= self) ||
+                   range_data.later_or_equal.as_ref().is_some_and(|v| v > self)
                 {
                     return None;
                 }
-                if let Some(check_ver) = &range_data.later_or_equal {
-                    if check_ver < self {
-                        range_data.later_or_equal = Some(self.clone());
+                // 更新ロジック:
+                range_data.exactly_equal = Some(self.clone());
+                // == が設定されたら、他の制約を絞り込む
+                range_data.strictly_earlier = None;
+                range_data.earlier_or_equal = Some(self.clone());
+                range_data.strictly_later = None;
+                range_data.later_or_equal = Some(self.clone());
+            }
+            VersionRangeInsertType::LaterOrEqual => {
+                // 矛盾チェック:
+                // == selfより小さい、< selfより小さいは矛盾
+                if range_data.exactly_equal.as_ref().is_some_and(|v| v < self)
+                    || range_data.strictly_earlier.as_ref().is_some_and(|v| v < self)
+                {
+                    return None;
+                }
+                // 更新ロジック:
+                // >= の既存値があれば、self より小さい場合は更新しない。self より大きい場合は self に更新
+                // なければ self を設定
+                if let Some(ref mut current_later_or_equal) = range_data.later_or_equal {
+                    if *current_later_or_equal < *self { // 既存の >= が self よりも小さいなら、selfに更新
+                        *current_later_or_equal = self.clone();
                     }
                 } else {
                     range_data.later_or_equal = Some(self.clone());
                 }
-                Some(range_data)
             }
             VersionRangeInsertType::StrictlyLater => {
+                // 矛盾チェック:
+                // == self以下、<= self以下、< self以下は矛盾
                 if range_data.exactly_equal.as_ref().is_some_and(|v| v <= self)
-                    || range_data
-                        .earlier_or_equal
-                        .as_ref()
-                        .is_some_and(|v| v <= self)
+                    || range_data.earlier_or_equal.as_ref().is_some_and(|v| v <= self)
+                    || range_data.strictly_earlier.as_ref().is_some_and(|v| v <= self)
                 {
                     return None;
                 }
-                if let Some(check_ver) = &range_data.later_or_equal {
-                    if check_ver <= self {
-                        range_data.later_or_equal = None;
+                // 更新ロジック:
+                // > の既存値があれば、self より小さい場合は更新しない。self より大きい場合は self に更新
+                // なければ self を設定
+                if let Some(ref mut current_later_or_equal) = range_data.later_or_equal {
+                    if *current_later_or_equal <= *self { // >= が <= self なら、> self に置き換える
+                        range_data.later_or_equal = None; // >= をクリア
                         range_data.strictly_later = Some(self.clone());
                     }
-                }
-                if let Some(check_ver) = &range_data.strictly_later {
-                    if check_ver < self {
-                        range_data.strictly_later = Some(self.clone());
+                } else if let Some(ref mut current_strictly_later) = range_data.strictly_later {
+                    if *current_strictly_later < *self { // > が < self なら、> self に置き換える
+                        *current_strictly_later = self.clone();
                     }
                 } else {
                     range_data.strictly_later = Some(self.clone());
                 }
-                Some(range_data)
             }
-        })?
+        }
+        Some(range_data)
     }
 }
 
@@ -355,6 +376,11 @@ impl FromStr for VersionRange {
     ///
     /// パースに成功した場合は`Ok(VersionRange)`、失敗した場合は`Err(String)`。
     fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let trimmed_s = s.trim();
+        if trimmed_s == "*" {
+            return Ok(VersionRange { _range_data: None });
+        }
+
         let mut range_data = Some(RangeData {
             strictly_earlier: None,
             earlier_or_equal: None,
@@ -363,45 +389,37 @@ impl FromStr for VersionRange {
             strictly_later: None,
         });
 
-        for part in s.split(',').map(str::trim) {
-            let parts: Vec<&str> = part.split_whitespace().collect();
-            if parts.len() == 1 {
-                let version_str = parts[0];
-                if version_str == "*" {
-                    // "*" は制約なしを意味するので、range_data を None にする
-                    range_data = None;
-                    break; // "*" があれば他の制約は無視
-                } else {
-                    // "=" と同じ意味として扱う
-                    // Original had unwrap(), keeping it as per user's request not to fix errors
-                    let version = Version::from_str(version_str).unwrap();
-                    range_data = version
-                        .insert_to_range_data(range_data, VersionRangeInsertType::ExactlyEqual);
+        for part in trimmed_s.split(',').map(str::trim) {
+            // E0716: temporary value dropped while borrowed の修正
+            let parts_vec: Vec<&str> = part.split_whitespace().collect();
+            let (version_str, insert_type) = match parts_vec.as_slice() {
+                [v_str] => (v_str, VersionRangeInsertType::ExactlyEqual),
+                [symbol, v_str] => {
+                    let insert_type = match *symbol {
+                        ">>" | ">" => VersionRangeInsertType::StrictlyLater,
+                        ">=" => VersionRangeInsertType::LaterOrEqual,
+                        "=" | "==" => VersionRangeInsertType::ExactlyEqual,
+                        "<=" => VersionRangeInsertType::EarlierOrEqual,
+                        "<<" | "<" => VersionRangeInsertType::StrictlyEarlier,
+                        _ => {
+                            return Err(format!("Invalid relation symbol: {}", symbol));
+                        }
+                    };
+                    (v_str, insert_type)
                 }
-            } else if parts.len() == 2 {
-                let symbol = parts[0];
-                let version_str = parts[1];
-                // Original had unwrap(), keeping it as per user's request not to fix errors
-                let version = Version::from_str(version_str).unwrap();
-                let insert_type = match symbol {
-                    ">>" | ">" => VersionRangeInsertType::StrictlyLater,
-                    ">=" => VersionRangeInsertType::LaterOrEqual,
-                    "=" | "==" => VersionRangeInsertType::ExactlyEqual,
-                    "<=" => VersionRangeInsertType::EarlierOrEqual,
-                    "<<" | "<" => VersionRangeInsertType::StrictlyEarlier,
-                    _ => {
-                        return Err(format!("Invalid relation: {}", symbol));
-                    }
-                };
-                range_data = version.insert_to_range_data(range_data, insert_type);
-            } else {
-                return Err(format!("Invalid range format: {}", part));
+                _ => return Err(format!("Invalid range format: {}", part)),
+            };
+
+            let version = Version::from_str(version_str)?; // エラーを伝播
+            range_data = version.insert_to_range_data(range_data, insert_type);
+
+            if range_data.is_none() {
+                // 挿入により範囲が無効になった場合
+                return Err(format!("Conflicting version range: {}", s));
             }
-            // 挿入の結果、範囲が無効になった場合のチェックが不足している可能性
         }
 
         Ok(VersionRange {
-            // Efficiency: Removed the clone here. Move the ownership of range_data.
             _range_data: range_data,
         })
     }
@@ -421,41 +439,28 @@ impl VersionRange {
     ///
     /// `version`が範囲内に含まれる場合は`true`、そうでない場合は`false`。
     pub fn compare(&self, version: &Version) -> bool {
-        // _range_data が None の場合（つまり "*"）は常に true
-        self._range_data.as_ref().is_none_or(|range_data| {
-            // 各制約に対して、version がその条件を満たさない場合は false を返す
-            if let Some(v) = &range_data.strictly_earlier {
-                if version >= v {
-                    // version >= strictly_earlier_version なら範囲外
-                    return false;
+        match self._range_data.as_ref() {
+            None => true, // "*" の場合は常に true
+            Some(range_data) => {
+                // 各制約を順にチェック
+                if let Some(v) = &range_data.strictly_earlier {
+                    if version >= v { return false; }
                 }
-            }
-            if let Some(v) = &range_data.earlier_or_equal {
-                if version > v {
-                    // version > earlier_or_equal_version なら範囲外
-                    return false;
+                if let Some(v) = &range_data.earlier_or_equal {
+                    if version > v { return false; }
                 }
-            }
-            if let Some(v) = &range_data.exactly_equal {
-                if version != v {
-                    // version != exactly_equal_version なら範囲外
-                    return false;
+                if let Some(v) = &range_data.exactly_equal {
+                    if version != v { return false; }
                 }
-            }
-            if let Some(v) = &range_data.later_or_equal {
-                if version < v {
-                    // version < later_or_equal_version なら範囲外
-                    return false;
+                if let Some(v) = &range_data.later_or_equal {
+                    if version < v { return false; }
                 }
-            }
-            if let Some(v) = &range_data.strictly_later {
-                if version <= v {
-                    // version <= strictly_later_version なら範囲外
-                    return false;
+                if let Some(v) = &range_data.strictly_later {
+                    if version <= v { return false; }
                 }
+                true // 全ての制約を満たす
             }
-            true // 全ての制約を満たす場合は true
-        })
+        }
     }
 }
 
@@ -463,15 +468,12 @@ impl Display for VersionRange {
     /// `VersionRange`の表示をフォーマットします。
     ///
     /// 内部の`_range_data`が`None`の場合は"*"と表示します。
-    /// `_range_data`がある場合、現在は何も表示しませんが、RangeDataのDisplay実装を使用することで
-    /// 具体的な制約を表示できます（※現在の実装ではこのDisplayはRangeDataに委譲していません）。
+    /// `_range_data`がある場合、RangeDataのDisplay実装を使用することで
+    /// 具体的な制約を表示できます。
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        // RangeDataのDisplay実装は存在するが、VersionRangeのDisplayはそれを使っていない点に注意。
-        // RangeDataのDisplayを使うと、解析された制約（例: "< 2.0, >= 1.0"）を表示できる。
-        if self._range_data.is_none() {
-            write!(f, "None")
-        } else {
-            write!(f, "{}", self._range_data.as_ref().unwrap())
+        match self._range_data.as_ref() {
+            None => write!(f, "*"), // "*" と表示
+            Some(range_data) => write!(f, "{}", range_data), // RangeDataのDisplayに委譲
         }
     }
 }
@@ -490,7 +492,6 @@ impl Display for RangeData {
             parts.push(format!("<= {}", v.string));
         }
         if let Some(v) = &self.exactly_equal {
-            // == は元の文字列形式を表示
             parts.push(format!("== {}", v.string));
         }
         if let Some(v) = &self.later_or_equal {
@@ -512,7 +513,6 @@ impl Display for RangeData {
 /// いくつかの`Version`と`VersionRange`を作成し、比較や表示を行います。
 /// この関数はテストフレームワークではなく、通常の関数として定義されています。
 #[cfg(test)]
-
 mod tests {
     use super::*;
     #[test]
@@ -526,5 +526,14 @@ mod tests {
         let range1 = VersionRange::from_str("< 2.0, > 1.1.3-build-1").unwrap();
         println!("Range1: {}", &range1);
         println!("In Range1, version1: {}", range1.compare(&version1));
+        let range_all = VersionRange::from_str("*").unwrap();
+        println!("RangeAll: {}", &range_all);
+        println!("In RangeAll, version1: {}", range_all.compare(&version1));
+        let range_exact = VersionRange::from_str("== 1.2.3").unwrap();
+        println!("RangeExact: {}", &range_exact);
+        println!("In RangeExact, version1: {}", range_exact.compare(&version1));
+
+        let conflict_range = VersionRange::from_str(">= 2.0, < 1.0");
+        println!("Conflict Range: {:?}", conflict_range);
     }
 }

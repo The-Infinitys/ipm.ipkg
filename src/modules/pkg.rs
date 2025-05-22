@@ -1,13 +1,12 @@
 use super::version::{Version, VersionRange};
 use crate::utils::{generate_email_address, shell::username};
-use cmd_arg::cmd_arg::Option;
 use colored::Colorize;
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
+
 pub mod depend;
 mod install;
 pub mod list;
-use super::messages;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(default)]
@@ -98,6 +97,7 @@ impl Display for PackageData {
                     let dep = &group[0];
                     writeln!(f, "  - {} ({})", dep.name.green(), dep.range)?;
                 } else {
+                    // alts_str の生成を維持し、可読性を優先
                     let alts: Vec<String> = group
                         .iter()
                         .map(|d| format!("{} ({})", d.name, d.range))
@@ -206,7 +206,8 @@ impl Display for RelationData {
             writeln!(f, "{}", "Dependencies:".bold())?;
             for group in &self.depend {
                 if group.len() == 1 {
-                    writeln!(f, "  - {}", group[0])?;
+                    // `to_string()` の呼び出しを減らし、`Display` 実装を利用
+                    writeln!(f, "  - {}", &group[0])?;
                 } else {
                     let alts: Vec<String> = group.iter().map(|d| d.to_string()).collect();
                     let alts_str = alts.join(" | ");
@@ -226,7 +227,7 @@ impl Display for RelationData {
             writeln!(f, "\n{}", "Suggests:".bold())?;
             for group in &self.suggests {
                 if group.len() == 1 {
-                    writeln!(f, "  - {}", group[0].to_string().yellow())?;
+                    writeln!(f, "  - {}", group[0].to_string().yellow())?; // `to_string()` は `colored` のために必要
                 } else {
                     let alts: Vec<String> = group.iter().map(|d| d.to_string()).collect();
                     let alts_str = alts.join(" | ");
@@ -239,7 +240,7 @@ impl Display for RelationData {
             writeln!(f, "\n{}", "Recommends:".bold())?;
             for group in &self.recommends {
                 if group.len() == 1 {
-                    writeln!(f, "  - {}", group[0].to_string().blue())?;
+                    writeln!(f, "  - {}", group[0].to_string().blue())?; // `to_string()` は `colored` のために必要
                 } else {
                     let alts: Vec<String> = group.iter().map(|d| d.to_string()).collect();
                     let alts_str = alts.join(" | ");
@@ -251,14 +252,14 @@ impl Display for RelationData {
         if !self.conflicts.is_empty() {
             writeln!(f, "\n{}", "Conflicts:".bold())?;
             for conflict in &self.conflicts {
-                writeln!(f, "  - {}", conflict.to_string().red())?;
+                writeln!(f, "  - {}", conflict.to_string().red())?; // `to_string()` は `colored` のために必要
             }
         }
 
         if !self.virtuals.is_empty() {
             writeln!(f, "\n{}", "Virtual Packages:".bold())?;
             for virtual_pkg in &self.virtuals {
-                writeln!(f, "  - {}", virtual_pkg.to_string().purple())?;
+                writeln!(f, "  - {}", virtual_pkg.to_string().purple())?; // `to_string()` は `colored` のために必要
             }
         }
 
@@ -323,6 +324,8 @@ impl Default for PackageVersion {
 }
 
 impl RelationData {
+    /// RelationData が空かどうかを判定します。
+    /// Serde の `skip_serializing_if` に使用されます。
     fn is_empty(&self) -> bool {
         self.depend.is_empty()
             && self.depend_cmds.is_empty()
@@ -393,6 +396,17 @@ mod tests {
             range: VersionRange::from_str("0.9.0").unwrap(),
         });
 
+        data.relation.virtuals.push(PackageVersion {
+            name: "my-virtual-pkg".to_string(),
+            version: Version::from_str("1.0.0").unwrap(),
+        });
+
+        data.relation.provide_cmds.push("my-command".to_string());
+        data.relation.provide_cmds.push("another-command".to_string());
+        data.relation.depend_cmds.push("git".to_string());
+        data.relation.depend_cmds.push("make".to_string());
+
+
         println!("{}", data);
     }
 
@@ -425,6 +439,10 @@ mod tests {
             name: "suggest-x".to_string(),
             range: VersionRange::from_str("= 3.0").unwrap(),
         }]);
+        relation.conflicts.push(PackageRange {
+            name: "conflicting-pkg".to_string(),
+            range: VersionRange::from_str("< 1.0").unwrap(),
+        });
         println!("{}", relation);
     }
 
@@ -444,18 +462,5 @@ mod tests {
             version: Version::default(),
         };
         println!("{}", version);
-    }
-}
-
-pub fn pkg(args: Vec<&Option>) -> Result<(), std::io::Error> {
-    if args.is_empty() {
-        return messages::unknown();
-    }
-    let sub_cmd = args.first().unwrap().to_owned();
-    let sub_args: Vec<&Option> = args[1..].to_vec();
-    match sub_cmd.opt_str.as_str() {
-        "list" | "--list" | "-l" => list::list(sub_args),
-        "install" | "--install" | "-i" => install::install(sub_args),
-        _ => messages::unknown(),
     }
 }

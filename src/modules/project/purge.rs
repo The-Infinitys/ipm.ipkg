@@ -1,75 +1,76 @@
 use super::ExecShell;
-use super::metadata::{self, metadata};
+use super::metadata; // metadata モジュール全体をインポート
 use crate::dprintln;
-use crate::modules::version::Version;
 use colored::Colorize;
 use std::fmt::{self, Display};
-use std::process::Command;
 
+/// パッケージのパージ（完全削除）に関するオプションを保持する構造体。
 #[derive(Default)]
 pub struct PurgeOptions {
+    /// パージ処理を実行するシェル。
     pub purge_shell: ExecShell,
 }
 
 impl Display for PurgeOptions {
+    /// PurgeOptions の内容を整形して表示します。
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let lines = [
-            format!("{}{}", "Purge Options".cyan().bold(), ":"),
-            format!(
-                "  {}{} {}",
-                "purge-shell".green().bold(),
-                ":",
-                self.purge_shell
-            ),
-        ];
-        for line in lines {
-            writeln!(f, "{}", line)?;
-        }
+        writeln!(f, "{}{}", "Purge Options".cyan().bold(), ":")?;
+        writeln!(
+            f,
+            "  {}{} {}",
+            "purge-shell".green().bold(),
+            ":",
+            self.purge_shell
+        )?;
         Ok(())
     }
 }
+
+/// プロジェクトのパージ処理を実行します。
+///
+/// この関数は、プロジェクトのメタデータを読み込み、設定されたシェルを使用して
+/// パージスクリプト（`ipkg/scripts/purge.sh`）を実行します。
+/// パージ処理が成功した場合は `Ok(())` を返し、失敗した場合はエラーメッセージを含む `Err(String)` を返します。
+///
+/// # 引数
+///
+/// * `opts`: パージ処理に関するオプション (`PurgeOptions`)。
+///
+/// # 戻り値
+///
+/// パージ処理の成否を示す `Result<(), String>`。
 pub fn purge(opts: PurgeOptions) -> Result<(), String> {
-    dprintln!("{}", &opts);
-    let target_dir = metadata::get_dir();
-    let target_dir = match target_dir {
-        Ok(path) => path,
-        Err(()) => {
-            let msg = "Error: Couldn't find Ipkg Directory".to_string();
-            eprintln!("{}", msg);
-            return Err(msg);
-        }
-    };
-    let project_metadata = metadata().unwrap();
+    dprintln!("{}", &opts); // デバッグ情報を出力
 
-    // Configure purge shell
-    fn setup_execshell(
-        cmd: &mut Command,
-        target_dir: &std::path::Path,
-        project_name: &str,
-        project_version: &Version,
-    ) {
-        cmd.current_dir(target_dir)
-            .env("IPKG_PACKAGE_NAME", project_name)
-            .env("IPKG_PACKAGE_VERSION", project_version.to_string())
-            .arg("ipkg/scripts/purge.sh");
-    }
+    // プロジェクトのメタデータディレクトリを取得
+    let target_dir = metadata::get_dir().map_err(|_| {
+        "Error: Couldn't find Ipkg Directory. Make sure you are in an ipkg project.".to_string()
+    })?;
 
+    // プロジェクトのメタデータを読み込む
+    let project_metadata = metadata::metadata().map_err(|e| {
+        format!("Error: Failed to read project metadata: {:?}", e)
+    })?;
+
+    // シェルコマンドの準備
     let mut purge_process = opts.purge_shell.generate();
-    setup_execshell(
-        &mut purge_process,
-        &target_dir,
-        &project_metadata.about.package.name,
-        &project_metadata.about.package.version,
-    );
+    purge_process
+        .current_dir(&target_dir) // プロジェクトディレクトリを作業ディレクトリに設定
+        .env("IPKG_PACKAGE_NAME", &project_metadata.about.package.name) // パッケージ名を環境変数に設定
+        .env("IPKG_PACKAGE_VERSION", project_metadata.about.package.version.to_string()) // パッケージバージョンを環境変数に設定
+        .arg("ipkg/scripts/purge.sh"); // 実行するスクリプトのパス
 
-    // Execute the purge process and handle the result
+    // パージ処理の実行
     let status = purge_process
         .status()
         .map_err(|e| format!("Failed to execute purge process: {}", e))?;
 
+    // 実行結果の確認
     if status.success() {
         Ok(())
     } else {
-        Err(format!("Purge process failed with status: {}", status))
+        // エラーコードがあればそれも表示
+        let code_info = status.code().map_or("".to_string(), |c| format!(" (exit code: {})", c));
+        Err(format!("Purge process failed with status: {}{}", status, code_info))
     }
 }

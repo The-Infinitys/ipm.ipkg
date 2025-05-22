@@ -1,60 +1,66 @@
 use crate::dprintln;
 use crate::{modules::pkg::PackageData, utils::files::is_file_exists};
+use std::{env, io, path::PathBuf}; // io::Error をインポート
 
-use std::env;
-use std::path::PathBuf;
-pub fn get_dir() -> Result<PathBuf, ()> {
-    let current_path = env::current_dir().unwrap();
-    let mut current_path = current_path.as_path();
+/// 現在のディレクトリまたは親ディレクトリから `package.yaml` を含むプロジェクトのルートディレクトリを探します。
+///
+/// # 戻り値
+/// `package.yaml` が見つかった場合はそのディレクトリの `PathBuf` を `Ok` で返します。
+/// 見つからなかった場合は `io::Error` を `Err` で返します。
+pub fn get_dir() -> Result<PathBuf, io::Error> {
+    let mut current_path = env::current_dir()?; // Result を直接扱う
     loop {
         let metadata_path = current_path.join("package.yaml");
-        dprintln!("{}", metadata_path.to_str().unwrap());
-        if is_file_exists(metadata_path.to_str().unwrap()) {
-            return Ok(current_path.to_owned());
+        dprintln!("{}", metadata_path.display()); // .to_str().unwrap() を避ける
+        if is_file_exists(metadata_path.to_str().ok_or_else(|| { // .to_str() の失敗を考慮
+            io::Error::new(io::ErrorKind::InvalidInput, "Invalid path characters")
+        })?) {
+            return Ok(current_path);
         } else {
-            dprintln!("Not found package.yaml");
-            let next_path = current_path.parent();
-            if next_path.is_none() {
-                eprintln!("Error: package.yaml not found");
-                return Err(());
+            dprintln!("Not found package.yaml in {}", current_path.display());
+            if let Some(parent) = current_path.parent() {
+                current_path = parent.to_owned(); // 親ディレクトリに移動
             } else {
-                current_path = next_path.unwrap();
+                // ルートディレクトリに到達し、package.yaml が見つからなかった場合
+                return Err(io::Error::new(
+                    io::ErrorKind::NotFound,
+                    "package.yaml not found in current or parent directories",
+                ));
             }
         }
     }
 }
-pub fn get_path() -> Result<PathBuf, ()> {
-    match get_dir() {
-        Ok(dir) => Ok(dir.join("package.yaml")),
-        Err(()) => Err(()),
-    }
+
+/// プロジェクトの `package.yaml` ファイルへのパスを取得します。
+///
+/// # 戻り値
+/// `package.yaml` への `PathBuf` を `Ok` で返します。
+/// ファイルが見つからない場合は `io::Error` を `Err` で返します。
+pub fn get_path() -> Result<PathBuf, io::Error> {
+    get_dir().map(|dir| dir.join("package.yaml"))
 }
-pub fn metadata() -> Result<PackageData, ()> {
-    let metadata_path = get_path()?;
-    let read_data = std::fs::read_to_string(metadata_path.to_str().unwrap());
-    if read_data.is_err() {
-        eprintln!("Error: Failed to read package.yaml");
-        return Err(());
-    }
-    let read_data = read_data.unwrap();
-    match serde_yaml::from_str::<PackageData>(&read_data) {
-        Ok(package_data) => Ok(package_data),
-        Err(e) => {
-            eprintln!("Error: Failed to parse package.yaml: {}", e);
-            Err(())
-        }
-    }
+
+/// `package.yaml` ファイルを読み込み、`PackageData` 構造体にパースします。
+///
+/// # 戻り値
+/// パースされた `PackageData` を `Ok` で返します。
+/// ファイルの読み込みやパースに失敗した場合は `io::Error` を `Err` で返します。
+pub fn metadata() -> Result<PackageData, io::Error> {
+    let metadata_path = get_path()?; // get_path() のエラーを伝播
+    let read_data = std::fs::read_to_string(&metadata_path)
+        .map_err(|e| io::Error::new(e.kind(), format!("Failed to read {}: {}", metadata_path.display(), e)))?;
+
+    serde_yaml::from_str::<PackageData>(&read_data)
+        .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, format!("Failed to parse {}: {}", metadata_path.display(), e)))
 }
-pub fn show_metadata() -> Result<(), ()> {
-    let read_data = metadata();
-    match read_data {
-        Ok(package_data) => {
-            println!("{}", package_data);
-            Ok(())
-        }
-        Err(_) => {
-            eprintln!("Error: Failed to parse package.yaml");
-            Err(())
-        }
-    }
+
+/// プロジェクトのメタデータを読み込み、標準出力に表示します。
+///
+/// # 戻り値
+/// メタデータの表示に成功した場合は `Ok(())` を返します。
+/// メタデータの取得や表示に失敗した場合は `io::Error` を `Err` で返します。
+pub fn show_metadata() -> Result<(), io::Error> {
+    let package_data = metadata()?; // metadata() のエラーを伝播
+    println!("{}", package_data);
+    Ok(())
 }

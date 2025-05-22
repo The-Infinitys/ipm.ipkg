@@ -1,69 +1,74 @@
 use super::ExecShell;
-use super::metadata::{self, metadata};
+use super::metadata; // metadata モジュール全体をインポート
 use crate::dprintln;
-use crate::modules::version::Version;
 use colored::Colorize;
 use std::fmt::{self, Display};
-use std::process::Command;
 
+/// プロジェクト削除時のオプションを定義する構造体です。
 #[derive(Default)]
 pub struct RemoveOptions {
+    /// 削除スクリプトを実行するシェルを指定します。
     pub remove_shell: ExecShell,
 }
 
 impl Display for RemoveOptions {
+    /// `RemoveOptions` をフォーマットして表示します。
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let lines = [
-            format!("{}{}", "Remove Options".cyan().bold(), ":"),
-            format!(
-                "  {}{} {}",
-                "remove-shell".green().bold(),
-                ":",
-                self.remove_shell
-            ),
-        ];
-        for line in lines {
-            writeln!(f, "{}", line)?;
-        }
+        writeln!(f, "{}{}", "Remove Options".cyan().bold(), ":")?;
+        writeln!(
+            f,
+            "  {}{} {}",
+            "remove-shell".green().bold(),
+            ":",
+            self.remove_shell
+        )?;
         Ok(())
     }
 }
 
+/// プロジェクトを削除する関数です。
+///
+/// この関数は、`ipkg` プロジェクトのメタデータを読み込み、
+/// 指定されたシェルで削除スクリプト (`ipkg/scripts/remove.sh`) を実行します。
+/// 削除プロセスが成功した場合は `Ok(())` を、失敗した場合は `Err(String)` を返します。
+///
+/// # 引数
+///
+/// * `opts`: 削除オプション (`RemoveOptions`)。
+///
+/// # 戻り値
+///
+/// 削除プロセスが成功した場合は `Ok(())`、失敗した場合はエラーメッセージを含む `Err(String)`。
 pub fn remove(opts: RemoveOptions) -> Result<(), String> {
-    dprintln!("{}", &opts);
-    let target_dir = metadata::get_dir();
-    let target_dir = match target_dir {
-        Ok(path) => path,
-        Err(()) => {
-            let msg = "Error: Couldn't find Ipkg Directory".to_string();
-            eprintln!("{}", msg);
-            return Err(msg);
-        }
-    };
-    let project_metadata = metadata().unwrap();
+    dprintln!("{}", &opts); // デバッグログ出力
 
-    // Configure remove shell
-    fn setup_execshell(
-        cmd: &mut Command,
-        target_dir: &std::path::Path,
-        project_name: &str,
-        project_version: &Version,
-    ) {
-        cmd.current_dir(target_dir)
-            .env("IPKG_PACKAGE_NAME", project_name)
-            .env("IPKG_PACKAGE_VERSION", project_version.to_string())
-            .arg("ipkg/scripts/remove.sh");
-    }
+    // Ipkg ディレクトリのパスを取得します。
+    // エラーの場合は、より詳細なエラーメッセージを返します。
+    let target_dir = metadata::get_dir().map_err(|_| {
+        "Error: Couldn't find Ipkg Directory. Make sure you are in a project directory or Ipkg is installed."
+            .to_string()
+    })?;
 
+    // プロジェクトのメタデータを取得します。
+    // `metadata().unwrap()` はパニックの可能性があるため、`?` を使用してエラーを伝播させます。
+    let project_metadata =
+        metadata::metadata() // `metadata::metadata` を明示的に呼び出す
+            .map_err(|e| format!("Error: Failed to retrieve project metadata: {:?}",e))?;
+
+    // 削除スクリプトを実行するためのコマンドを設定します。
     let mut remove_process = opts.remove_shell.generate();
-    setup_execshell(
-        &mut remove_process,
-        &target_dir,
-        &project_metadata.about.package.name,
-        &project_metadata.about.package.version,
-    );
 
-    // Execute the remove process and handle the result
+    // コマンドの作業ディレクトリ、環境変数、および実行するスクリプトを設定します。
+    remove_process
+        .current_dir(&target_dir)
+        .env("IPKG_PACKAGE_NAME", &project_metadata.about.package.name)
+        .env(
+            "IPKG_PACKAGE_VERSION",
+            project_metadata.about.package.version.to_string(),
+        )
+        .arg("ipkg/scripts/remove.sh");
+
+    // 削除プロセスを実行し、結果をハンドリングします。
     let status = remove_process
         .status()
         .map_err(|e| format!("Failed to execute remove process: {}", e))?;
@@ -71,6 +76,10 @@ pub fn remove(opts: RemoveOptions) -> Result<(), String> {
     if status.success() {
         Ok(())
     } else {
-        Err(format!("Remove process failed with status: {}", status))
+        // エラーコードがあればそれを表示し、なければ一般的な失敗メッセージを表示します。
+        Err(format!(
+            "Remove process failed with status: {}",
+            status.code().unwrap_or(-1) // ExitStatus からコードを取得
+        ))
     }
 }

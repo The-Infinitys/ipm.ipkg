@@ -7,103 +7,167 @@ use colored::Colorize;
 use serde::{Deserialize, Serialize};
 use serde_yaml;
 use std::fmt::{self, Display, Formatter};
-use std::fs::File;
-use std::io::Read;
+use std::fs; // fs::File を fs に変更して、fs::read_to_string も利用可能にする
+use std::io; // io::Error を利用するために追加
+use std::path::PathBuf;
+
+/// インストールされているパッケージリストのメタデータを表します。
 #[derive(Serialize, Deserialize)]
 pub struct PackageListData {
-    last_modified: DateTime<Local>,
-    packages: InstalledPackageData,
+    pub last_modified: DateTime<Local>,
+    // `installed_packages` にリネームして複数形を明示
+    pub installed_packages: Vec<InstalledPackageData>,
 }
+
 impl Default for PackageListData {
     fn default() -> Self {
         Self {
             last_modified: Local::now(),
-            packages: InstalledPackageData::default(),
+            installed_packages: Vec::new(), // デフォルトは空のVec
         }
     }
 }
 
-#[derive(Serialize, Deserialize)]
+/// 個々のインストール済みパッケージの詳細情報を表します。
+#[derive(Serialize, Deserialize, Default)] // Default をderive
 pub struct InstalledPackageData {
-    info: PackageData,
-    last_modified: DateTime<Local>,
-    is_auto_installed: bool,
+    pub info: PackageData,
+    pub last_modified: DateTime<Local>,
+    pub is_auto_installed: bool,
 }
-impl PackageListData {
-    fn new(is_local: bool) -> PackageListData {
-        let target_path = if is_local {
-            path::local::packageslist_filepath()
-        } else {
-            path::global::packageslist_filepath()
-        };
-        let mut target_file = File::open(target_path).expect("Couldn't found packages list file.");
-        let mut packageslist_str = String::new();
 
-        target_file
-            .read_to_string(&mut packageslist_str)
-            .expect("Failed to read packages list file");
-        let mut result_data: PackageListData = serde_yaml::from_str(&packageslist_str).unwrap();
-        result_data.last_modified = Local::now();
-        result_data
+impl PackageListData {
+    /// 指定されたパスからパッケージリストデータを読み込みます。
+    ///
+    /// # 引数
+    /// * `list_filepath` - 読み込むパッケージリストファイルのパス。
+    ///
+    /// # 戻り値
+    /// 読み込みとパースが成功した場合は `PackageListData` を、失敗した場合は `io::Error` を返します。
+    fn from_filepath(list_filepath: &PathBuf) -> Result<PackageListData, io::Error> {
+        let packageslist_str = fs::read_to_string(list_filepath)
+            .map_err(|e| io::Error::new(e.kind(), format!("Failed to read packages list file '{}': {}", list_filepath.display(), e)))?;
+
+        serde_yaml::from_str(&packageslist_str)
+            .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, format!("Failed to parse packages list file '{}': {}", list_filepath.display(), e)))
     }
 }
-impl Default for InstalledPackageData {
-    fn default() -> Self {
-        Self {
-            info: PackageData::default(),
-            last_modified: Local::now(),
-            is_auto_installed: false,
-        }
-    }
-}
+
 impl Display for PackageListData {
+    /// `PackageListData` を整形して表示します。
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        let lines = [
-            format!(
-                "{}: {}",
-                "Last Modified".green().bold(),
-                self.last_modified.to_rfc3339()
-            ),
-            format!("{}: \n{}", "Packages".cyan().bold(), self.packages),
-        ];
-        for line in lines {
-            writeln!(f, "{}", line)?;
+        writeln!(
+            f,
+            "{}: {}",
+            "Last Modified".green().bold(),
+            self.last_modified.to_rfc3339()
+        )?;
+        writeln!(f, "{}:", "Packages".cyan().bold())?; // 改行のみ
+        if self.installed_packages.is_empty() {
+            writeln!(f, "  No packages installed in this scope.")?;
+        } else {
+            for pkg in &self.installed_packages {
+                writeln!(f, "{}", pkg)?; // 各パッケージ情報を表示
+            }
         }
         Ok(())
     }
 }
 
 impl Display for InstalledPackageData {
+    /// `InstalledPackageData` を整形して表示します。
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        let lines = [
-            format!(
-                "{}: {}",
-                "Last Modified".green().bold(),
-                self.last_modified.to_rfc3339()
-            ),
+        writeln!(f, "  {}: {}", "Name".bold(), self.info.about.package.name.cyan())?;
+        writeln!(f, "    {}: {}", "Version".bold(), self.info.about.package.version)?;
+        writeln!(
+            f,
+            "    {}: {} <{}>",
+            "Author".bold(),
+            self.info.about.author.name,
+            self.info.about.author.email
+        )?;
+        writeln!(
+            f,
+            "    {}: {}",
+            "Last Modified".bold(),
+            self.last_modified.to_rfc3339()
+        )?;
+        writeln!(
+            f,
+            "    {}: {}",
+            "Installation Type".bold(),
             if self.is_auto_installed {
-                "Automatic Installed".to_owned()
+                "Automatic".yellow()
             } else {
-                "Manually Installed".to_owned()
-            },
-            format!("{}:\n{}", "INFO".green().bold(), self.info),
-        ];
-        for line in lines {
-            writeln!(f, "{}", line)?;
+                "Manual".green()
+            }
+        )?;
+        // RelationData も表示する場合
+        if !self.info.relation.is_empty() {
+             writeln!(f, "    {}", "Relations:".bold())?;
+             // RelationData の Display 実装を再利用
+             let mut indented_relations = String::new();
+             // RelationData の Display 実装から出力される各行にインデントを追加
+             for line in format!("{}", self.info.relation).lines() {
+                 indented_relations.push_str(&format!("      {}\n", line));
+             }
+             write!(f, "{}", indented_relations)?;
         }
         Ok(())
     }
 }
+
+/// インストールされているパッケージのリストを表示します。
+///
+/// この関数は、`--local` または `--global` オプションに基づいて、
+/// ローカルまたはグローバルなパッケージリストを読み込み、表示します。
+/// デフォルトでは、現在のユーザーがスーパーユーザーでない限りローカルリストを表示します。
+///
+/// # 引数
+/// * `args` - コマンドライン引数のリスト。
+///
+/// # 戻り値
+/// リスト表示が成功した場合は `Ok(())` を、エラーが発生した場合は `std::io::Error` を返します。
 pub fn list(args: Vec<&Option>) -> Result<(), std::io::Error> {
-    let mut list_target = !shell::is_superuser();
+    // デフォルトのリストターゲットは、現在のユーザーがスーパーユーザーでない場合ローカル
+    let mut list_local = !shell::is_superuser();
+
+    // 引数を解析してリストターゲットを決定
     for arg in args {
         match arg.opt_str.as_str() {
-            "--local" | "-l" => list_target = true,
-            "--global" | "-g" => list_target = false,
-            _ => {}
+            "--local" | "-l" => list_local = true,
+            "--global" | "-g" => list_local = false,
+            _ => {
+                // 不明なオプションの場合、エラーを返すか、無視するかはアプリケーションのポリシーによる
+                eprintln!("Warning: Unknown option '{}'. Ignoring.", arg.opt_str);
+                // エラーを返す場合は以下のように変更
+                // return Err(std::io::Error::new(
+                //     std::io::ErrorKind::InvalidInput,
+                //     format!("Unknown option: {}", arg.opt_str)
+                // ));
+            }
         }
     }
-    let packages_list_data = PackageListData::new(list_target);
+
+    let target_filepath = if list_local {
+        path::local::packageslist_filepath()
+    } else {
+        path::global::packageslist_filepath()
+    };
+
+    // パッケージリストの読み込みと表示
+    let packages_list_data = PackageListData::from_filepath(&target_filepath)
+        .or_else(|e| {
+            // ファイルが存在しない場合（NotFound）は、空のリストとして扱う
+            if e.kind() == io::ErrorKind::NotFound {
+                println!("No packages list found at {}. Assuming empty list.", target_filepath.display());
+                Ok(PackageListData::default())
+            } else {
+                // その他のエラーはそのまま伝播
+                Err(e)
+            }
+        })?;
+
     println!("{}", packages_list_data);
     Ok(())
 }
