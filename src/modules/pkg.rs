@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 pub mod depend;
 pub mod list;
+mod install;
 use super::messages;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -484,6 +485,7 @@ pub fn pkg(args: Vec<&Option>) {
     let sub_args: Vec<&Option> = args[1..].to_vec();
     match sub_cmd.opt_str.as_str() {
         "list" | "--list" | "-l" => list::list(sub_args),
+        "install" | "--install" | "-i" => install::install(sub_args),
         _ => messages::unknown(),
     }
 }

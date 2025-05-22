@@ -11,9 +11,15 @@ fn home_path() -> PathBuf {
     });
     PathBuf::from(home_path_str)
 }
+fn ipkg_path() -> PathBuf {
+    home_path().join(".ipkg")
+}
 pub fn packageslist_filepath() -> PathBuf {
     packages_dirpath().join("list.yaml")
 }
 pub fn packages_dirpath() -> PathBuf {
-    home_path().join(".ipkg/packages/")
+    ipkg_path().join("packages")
+}
+pub fn cache_path() -> PathBuf {
+    ipkg_path().join("caches")
 }

@@ -1,5 +1,6 @@
 use super::super::system::path;
 use super::PackageData;
+use crate::utils::shell;
 use chrono::{DateTime, Local};
 use cmd_arg::cmd_arg::Option;
 use colored::Colorize;
@@ -94,9 +95,14 @@ impl Display for InstalledPackageData {
     }
 }
 pub fn list(args: Vec<&Option>) {
+    let mut list_target = !shell::is_superuser();
     for arg in args {
-        println!("{}", arg);
+        match arg.opt_str.as_str() {
+            "--local" | "-l" => list_target = true,
+            "--global" | "-g" => list_target = false,
+            _ => {}
+        }
     }
-    let packages_list_data = PackageListData::new(true);
+    let packages_list_data = PackageListData::new(list_target);
     println!("{}", packages_list_data);
 }

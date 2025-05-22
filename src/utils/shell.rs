@@ -71,3 +71,13 @@ pub fn shell_type() -> String {
         .into_string()
         .unwrap()
 }
+pub fn is_superuser() -> bool {
+    if cfg!(target_os = "windows") {
+        return false;
+    }
+    let output: Output = Command::new("id")
+        .output()
+        .expect("failed to execute process");
+    let id: String = String::from_utf8(output.stdout).unwrap();
+    id.contains("uid=0(root)")
+}
