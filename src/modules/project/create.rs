@@ -55,13 +55,13 @@ impl Display for ProjectParams {
 pub enum ProjectCreationError {
     /// YAMLのシリアライズまたはデシリアライズエラー。
     #[error("YAML serialization/deserialization error: {0}")]
-    YamlError(#[from] serde_yaml::Error),
+    Yaml(#[from] serde_yaml::Error),
     /// I/O関連のエラー。
     #[error("I/O error: {0}")]
-    IoError(#[from] io::Error),
+    Io(#[from] io::Error),
     /// テンプレート固有の作成エラー。
     #[error("Template creation error: {0}")]
-    TemplateError(String), // String でエラーメッセージを保持
+    Template(String), // String でエラーメッセージを保持
 }
 
 /// 新しいプロジェクトを初期化し、必要なファイルを生成します。
@@ -86,15 +86,15 @@ pub fn create(params: &ProjectParams) -> Result<(), ProjectCreationError> {
 
     // file_creation は Result<Result<(), io::Error>, ...> を返す可能性があるので注意
     // ここでは file_creation が直接 io::Result を返すことを想定
-    file_creation(project_data_filename, &data).map_err(ProjectCreationError::IoError)?; // io::Error を ProjectCreationError::IoError にマップ
+    file_creation(project_data_filename, &data).map_err(ProjectCreationError::Io)?; // io::Error を ProjectCreationError::Io にマップ
 
     // テンプレートに基づくファイル生成
     match params.project_template {
         ProjectTemplateType::Default => {
-            templates::default().map_err(|e| ProjectCreationError::TemplateError(e.to_string()))
+            templates::default().map_err(|e| ProjectCreationError::Template(e.to_string()))
         }
         ProjectTemplateType::Rust => {
-            templates::rust().map_err(|e| ProjectCreationError::TemplateError(e.to_string()))
+            templates::rust().map_err(|e| ProjectCreationError::Template(e.to_string()))
         }
     }?; // ここで ? 演算子を使用し、エラーを自動伝播
 
