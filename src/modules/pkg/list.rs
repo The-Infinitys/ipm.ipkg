@@ -1,9 +1,12 @@
+use super::super::system::path;
 use super::PackageData;
 use chrono::{DateTime, Local};
 use colored::Colorize;
 use serde::{Deserialize, Serialize};
+use serde_yaml;
 use std::fmt::{self, Display, Formatter};
-
+use std::fs::File;
+use std::io::Read;
 #[derive(Serialize, Deserialize)]
 pub struct PackageListData {
     last_modified: DateTime<Local>,
@@ -23,6 +26,22 @@ pub struct InstalledPackageData {
     info: PackageData,
     last_modified: DateTime<Local>,
     is_auto_installed: bool,
+}
+impl InstalledPackageData {
+    fn new(is_local: bool) -> InstalledPackageData {
+        let target_path = if is_local {
+            path::local::packageslist_filepath()
+        } else {
+            path::global::packageslist_filepath()
+        };
+        let mut target_file = File::open(target_path).expect("Couldn't found packages list file.");
+        let mut packageslist_str = String::new();
+
+        target_file
+            .read_to_string(&mut packageslist_str)
+            .expect("Failed to read packages list file");
+        serde_yaml::from_str(&packageslist_str).unwrap()
+    }
 }
 impl Default for InstalledPackageData {
     fn default() -> Self {

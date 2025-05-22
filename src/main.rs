@@ -1,7 +1,7 @@
 use cmd_arg::cmd_arg::get as get_cmd_data;
 use cmd_arg::cmd_arg::{Option, OptionType};
 use ipkg::dprintln;
-use ipkg::modules::{messages, project, system};
+use ipkg::modules::{messages, pkg, project, system};
 use ipkg::utils::shell::{self, ExitStatus};
 fn main() {
     let command_data = get_cmd_data();
@@ -17,6 +17,7 @@ fn main() {
         Help,
         Version,
         Project,
+        Package,
         Unknown,
         System,
     }
@@ -37,6 +38,7 @@ fn main() {
             "version" => SubCommand::Version,
             "project" => SubCommand::Project,
             "system" => SubCommand::System,
+            "pkg" | "package" => SubCommand::Package,
             _ => SubCommand::Unknown,
         },
     };
@@ -45,6 +47,7 @@ fn main() {
         SubCommand::Version => messages::version(),
         SubCommand::Project => project::project(sub_opts),
         SubCommand::System => system::system(sub_opts),
+        SubCommand::Package => pkg::pkg(sub_opts),
         SubCommand::Unknown => messages::unknown(),
     }
 }
