@@ -3,7 +3,7 @@ use cmd_arg::cmd_arg::{Option, OptionType};
 use ipkg::dprintln;
 use ipkg::modules::{messages, pkg, project, system};
 use ipkg::utils::shell::{self, ExitStatus};
-fn main() {
+fn main() ->Result<(),std::io::Error>{
     let command_data = get_cmd_data();
     dprintln!("{}", command_data);
     let opts = command_data.opts;

@@ -1,6 +1,5 @@
 //! このモジュールは、アプリケーションのメッセージ（ウェルカムメッセージ、バージョン情報、ヘルプメッセージなど）の表示を扱います。
 //! Cargo.tomlからパッケージ情報を取得し、メッセージテンプレート内のプレースホルダーを置換する機能を提供します。
-use crate::utils::shell;
 use cmd_arg::cmd_arg::{Option, cmd_str}; // `Option`構造体が外部モジュールにあることを示しています
 /// Cargo.tomlから取得したパッケージ情報を保持する構造体。
 ///
@@ -67,12 +66,13 @@ pub fn welcome() {
 /// アプリケーションのバージョン情報を表示します。
 ///
 /// `[name] [version] ([architecture])` の形式で標準出力に表示します。
-pub fn version() {
+pub fn version()->Result<(),std::io::Error> {
     let cargo_package = get_info();
     println!(
         "{} {} ({})",
         cargo_package.name, cargo_package.version, cargo_package.architecture
     );
+    Ok(())
 }
 
 /// ヘルプメッセージを表示します。
@@ -84,7 +84,7 @@ pub fn version() {
 ///
 /// * `args`: ヘルプメッセージの種類を決定するために使用される引数のベクタ。
 ///   現在の実装では、最初の引数のみが `install` かどうかの判定に使用されます。
-pub fn help(args: Vec<&Option>) {
+pub fn help(args: Vec<&Option>)->Result<(),std::io::Error> {
     let help_type: HelpType = if args.is_empty() {
         HelpType::General
     } else {
@@ -94,6 +94,7 @@ pub fn help(args: Vec<&Option>) {
         }
     };
     show_help(help_type);
+    Ok(())
 }
 
 /// 表示するヘルプメッセージの種類を表す列挙型。
@@ -133,7 +134,7 @@ fn show_help(help_type: HelpType) {
 }
 
 /// 不明なヘルプタイプが指定された場合にエラーメッセージを表示します。
-pub fn unknown() {
+pub fn unknown() ->Result<(),std::io::Error>{
     eprintln!("unknown command:\n  {}", cmd_str());
-    shell::exit(shell::ExitStatus::UnknownCommand);
+    Err(std::io::Error::new(std::io::ErrorKind::Other, "unknown command"))
 }

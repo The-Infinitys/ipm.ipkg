@@ -1,13 +1,11 @@
 mod global;
 mod local;
 use super::super::messages;
-use crate::utils::shell::{self, ExitStatus};
 use cmd_arg::cmd_arg::Option;
 use std::io::{Error, ErrorKind};
-pub fn configure(args: Vec<&Option>) {
+pub fn configure(args: Vec<&Option>) -> Result<(), std::io::Error> {
     if args.is_empty() {
-        messages::unknown();
-        return;
+        return messages::unknown();
     }
 
     let sub_cmd = args.first().unwrap();
@@ -17,11 +15,5 @@ pub fn configure(args: Vec<&Option>) {
         "global" | "--global" | "-g" => global::configure(),
         _ => Err(Error::new(ErrorKind::NotFound, "The opt was not found")),
     };
-    match result {
-        Ok(()) => shell::exit(ExitStatus::Success),
-        Err(e) => {
-            eprintln!("Error: {}", e);
-            shell::exit(ExitStatus::Failure)
-        }
-    };
+    result
 }

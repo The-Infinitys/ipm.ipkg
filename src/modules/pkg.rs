@@ -447,10 +447,9 @@ mod tests {
     }
 }
 
-pub fn pkg(args: Vec<&Option>) {
+pub fn pkg(args: Vec<&Option>)->Result<(),std::io::Error> {
     if args.is_empty() {
-        messages::unknown();
-        return;
+        return messages::unknown();
     }
     let sub_cmd = args.first().unwrap().to_owned();
     let sub_args: Vec<&Option> = args[1..].to_vec();

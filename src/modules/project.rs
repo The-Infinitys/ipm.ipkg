@@ -65,10 +65,9 @@ impl Display for ExecShell {
     }
 }
 
-pub fn project(args: Vec<&Option>) {
+pub fn project(args: Vec<&Option>) -> Result<(), std::io::Error> {
     if args.is_empty() {
-        messages::unknown();
-        return;
+        return messages::unknown();
     }
     let sub_cmd = args.first().unwrap();
     let sub_args: Vec<&Option> = args[1..].to_vec();
@@ -83,7 +82,7 @@ pub fn project(args: Vec<&Option>) {
         _ => messages::unknown(),
     }
 }
-fn project_package(args: Vec<&Option>) {
+fn project_package(args: Vec<&Option>) -> Result<(), std::io::Error> {
     let mut package_options: package::PackageOptions = package::PackageOptions::default();
     for arg in args {
         match arg.opt_str.as_str() {
@@ -101,19 +100,16 @@ fn project_package(args: Vec<&Option>) {
             _ => {
                 eprintln!("Invalid Option: {}", arg.opt_str);
                 eprintln!("Available Options: --target");
-                messages::unknown();
+                return messages::unknown();
             }
         }
     }
     match package::package(package_options) {
-        Ok(()) => shell::exit(ExitStatus::Success),
-        Err(msg) => {
-            eprintln!("Error: {}", msg);
-            shell::exit(ExitStatus::Failure)
-        }
+        Ok(()) => Ok(()),
+        Err(msg) => Err(std::io::Error::new(std::io::ErrorKind::Other, msg)),
     }
 }
-fn project_build(args: Vec<&Option>) {
+fn project_build(args: Vec<&Option>) -> Result<(), std::io::Error> {
     let mut build_options: build::BuildOptions = BuildOptions::default();
     for arg in args {
         match arg.opt_str.as_str() {
@@ -142,22 +138,17 @@ fn project_build(args: Vec<&Option>) {
             _ => {
                 eprintln!("Unknown Option: {}", arg.opt_str);
                 eprintln!("Available Options: --release, --debug ,--shell|--sh");
-                messages::unknown()
+                return messages::unknown();
             }
         }
     }
     match build::build(build_options) {
-        Ok(()) => shell::exit(ExitStatus::Success),
-        Err(msg) => {
-            eprintln!("Error: {}", msg);
-            shell::exit(ExitStatus::Failure)
-        }
+        Ok(()) => Ok(()),
+        Err(msg) => Err(std::io::Error::new(std::io::ErrorKind::Other, msg)),
     }
 }
 
-// ---
-// ## Project Install Function
-fn project_install(args: Vec<&Option>) {
+fn project_install(args: Vec<&Option>) -> Result<(), std::io::Error> {
     let mut install_options: install::InstallOptions = InstallOptions::default();
     for arg in args {
         match arg.opt_str.as_str() {
@@ -171,8 +162,7 @@ fn project_install(args: Vec<&Option>) {
                             install_options.install_shell = shell_opt;
                         }
                         Err(e) => {
-                            eprintln!("Error: {}", e);
-                            shell::exit(ExitStatus::Failure);
+                            return Err(std::io::Error::new(std::io::ErrorKind::Other, e));
                         }
                     };
                 }
@@ -186,22 +176,17 @@ fn project_install(args: Vec<&Option>) {
             _ => {
                 eprintln!("Unknown Option: {}", arg.opt_str);
                 eprintln!("Available Options: --global, --local ,--shell|--sh");
-                messages::unknown();
+                return messages::unknown();
             }
         }
     }
     match install::install(install_options) {
-        Ok(()) => shell::exit(ExitStatus::Success),
-        Err(msg) => {
-            eprintln!("Error: {}", msg);
-            shell::exit(ExitStatus::Failure);
-        }
+        Ok(()) => Ok(()),
+        Err(msg) => Err(std::io::Error::new(std::io::ErrorKind::Other, msg)),
     }
 }
 
-// ---
-// ## Project Remove Function
-fn project_remove(args: Vec<&Option>) {
+fn project_remove(args: Vec<&Option>) -> Result<(), std::io::Error> {
     let mut remove_options: remove::RemoveOptions = RemoveOptions::default();
     for arg in args {
         match arg.opt_str.as_str() {
@@ -215,8 +200,7 @@ fn project_remove(args: Vec<&Option>) {
                             remove_options.remove_shell = shell_opt;
                         }
                         Err(e) => {
-                            eprintln!("Error: {}", e);
-                            shell::exit(ExitStatus::Failure);
+                            return Err(std::io::Error::new(std::io::ErrorKind::Other, e));
                         }
                     };
                 }
@@ -224,22 +208,17 @@ fn project_remove(args: Vec<&Option>) {
             _ => {
                 eprintln!("Unknown Option: {}", arg.opt_str);
                 eprintln!("Available Options: --shell|--sh");
-                messages::unknown();
+                return messages::unknown();
             }
         }
     }
     match remove::remove(remove_options) {
-        Ok(()) => shell::exit(ExitStatus::Success),
-        Err(msg) => {
-            eprintln!("Error: {}", msg);
-            shell::exit(ExitStatus::Failure);
-        }
+        Ok(()) => Ok(()),
+        Err(msg) => Err(std::io::Error::new(std::io::ErrorKind::Other, msg)),
     }
 }
 
-// ---
-// ## Project Purge Function
-fn project_purge(args: Vec<&Option>) {
+fn project_purge(args: Vec<&Option>) -> Result<(), std::io::Error> {
     let mut purge_options: purge::PurgeOptions = PurgeOptions::default();
     for arg in args {
         match arg.opt_str.as_str() {
@@ -253,8 +232,7 @@ fn project_purge(args: Vec<&Option>) {
                             purge_options.purge_shell = shell_opt;
                         }
                         Err(e) => {
-                            eprintln!("Error: {}", e);
-                            shell::exit(ExitStatus::Failure);
+                            return Err(std::io::Error::new(std::io::ErrorKind::Other, e));
                         }
                     };
                 }
@@ -262,32 +240,27 @@ fn project_purge(args: Vec<&Option>) {
             _ => {
                 eprintln!("Unknown Option: {}", arg.opt_str);
                 eprintln!("Available Options: --shell|--sh");
-                messages::unknown();
+                return messages::unknown();
             }
         }
     }
     match purge::purge(purge_options) {
-        Ok(()) => shell::exit(ExitStatus::Success),
-        Err(msg) => {
-            eprintln!("Error: {}", msg);
-            shell::exit(ExitStatus::Failure);
-        }
+        Ok(()) => Ok(()),
+        Err(msg) => Err(std::io::Error::new(std::io::ErrorKind::Other, msg)),
     }
 }
 
-// ---
-// ## Project Metadata Function
-fn project_metadata() {
+fn project_metadata() -> Result<(), std::io::Error> {
     if metadata::show_metadata().is_err() {
-        eprintln!("Error: failed to get metadata");
-        shell::exit(ExitStatus::Failure);
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            "failed to get metadata",
+        ));
     }
-    shell::exit(ExitStatus::Success);
+    Ok(())
 }
 
-// ---
-// ## Project Create Function
-fn project_create(args: Vec<&Option>) {
+fn project_create(args: Vec<&Option>) -> Result<(), std::io::Error> {
     let mut params = ProjectParams {
         project_name: String::new(),
         project_template: ProjectTemplateType::Default,
@@ -312,7 +285,7 @@ fn project_create(args: Vec<&Option>) {
                         Err(e) => {
                             let msg = format!("Error: {}", e);
                             eprintln!("Error: {}", msg);
-                            shell::exit(ExitStatus::Failure);
+                            return Err(std::io::Error::new(std::io::ErrorKind::Other, msg));
                         }
                     }
                 }
@@ -327,7 +300,7 @@ fn project_create(args: Vec<&Option>) {
                     params.author.email = arg.opt_values.first().unwrap().to_owned();
                 }
             }
-            _ => messages::unknown(),
+            _ => return messages::unknown(),
         }
     }
     if params.project_name.is_empty() {
@@ -346,22 +319,28 @@ fn project_create(args: Vec<&Option>) {
     match fs::create_dir(&params.project_name) {
         Ok(_) => {
             if env::set_current_dir(&params.project_name).is_err() {
-                eprintln!("Error: failed to set current dir: {}", &params.project_name);
-                shell::exit(ExitStatus::Failure);
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::Other,
+                    format!("failed to set current dir: {}", &params.project_name),
+                ));
             }
             if create::create(&params).is_err() {
-                eprintln!("Error: failed to create project: {}", &params.project_name);
-                shell::exit(ExitStatus::Failure);
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::Other,
+                    format!("failed to create project: {}", &params.project_name),
+                ));
             }
         }
         Err(err) => {
-            eprintln!(
-                "Error: failed to create dir: {}\nDue to: {}",
-                &params.project_name,
-                err.kind()
-            );
-            shell::exit(ExitStatus::Failure);
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                format!(
+                    "failed to create dir: {}\nDue to: {}",
+                    &params.project_name,
+                    err.kind()
+                ),
+            ));
         }
     }
-    shell::exit(ExitStatus::Success);
+    Ok(())
 }

@@ -94,7 +94,7 @@ impl Display for InstalledPackageData {
         Ok(())
     }
 }
-pub fn list(args: Vec<&Option>) {
+pub fn list(args: Vec<&Option>)->Result<(),std::io::Error> {
     let mut list_target = !shell::is_superuser();
     for arg in args {
         match arg.opt_str.as_str() {
@@ -105,4 +105,5 @@ pub fn list(args: Vec<&Option>) {
     }
     let packages_list_data = PackageListData::new(list_target);
     println!("{}", packages_list_data);
+    Ok(())
 }
