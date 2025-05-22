@@ -1,6 +1,7 @@
 use super::super::system::path;
 use super::PackageData;
 use chrono::{DateTime, Local};
+use cmd_arg::cmd_arg::Option;
 use colored::Colorize;
 use serde::{Deserialize, Serialize};
 use serde_yaml;
@@ -27,8 +28,8 @@ pub struct InstalledPackageData {
     last_modified: DateTime<Local>,
     is_auto_installed: bool,
 }
-impl InstalledPackageData {
-    fn new(is_local: bool) -> InstalledPackageData {
+impl PackageListData {
+    fn new(is_local: bool) -> PackageListData {
         let target_path = if is_local {
             path::local::packageslist_filepath()
         } else {
@@ -40,7 +41,9 @@ impl InstalledPackageData {
         target_file
             .read_to_string(&mut packageslist_str)
             .expect("Failed to read packages list file");
-        serde_yaml::from_str(&packageslist_str).unwrap()
+        let mut result_data: PackageListData = serde_yaml::from_str(&packageslist_str).unwrap();
+        result_data.last_modified = Local::now();
+        result_data
     }
 }
 impl Default for InstalledPackageData {
@@ -89,4 +92,11 @@ impl Display for InstalledPackageData {
         }
         Ok(())
     }
+}
+pub fn list(args: Vec<&Option>) {
+    for arg in args {
+        println!("{}", arg);
+    }
+    let packages_list_data = PackageListData::new(true);
+    println!("{}", packages_list_data);
 }

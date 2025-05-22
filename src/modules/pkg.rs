@@ -482,5 +482,8 @@ pub fn pkg(args: Vec<&Option>) {
     }
     let sub_cmd = args.first().unwrap().to_owned();
     let sub_args: Vec<&Option> = args[1..].to_vec();
-    println!("{:#?}{:#?}", sub_cmd, sub_args);
+    match sub_cmd.opt_str.as_str(){
+        "list"|"--list"|"-l"=>list::list(sub_args),
+        _=>messages::unknown()
+    }
 }
