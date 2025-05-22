@@ -53,7 +53,7 @@ pub fn remove(opts: RemoveOptions) -> Result<(), String> {
     // `metadata().unwrap()` はパニックの可能性があるため、`?` を使用してエラーを伝播させます。
     let project_metadata =
         metadata::metadata() // `metadata::metadata` を明示的に呼び出す
-            .map_err(|e| format!("Error: Failed to retrieve project metadata: {:?}",e))?;
+            .map_err(|e| format!("Error: Failed to retrieve project metadata: {:?}", e))?;
 
     // 削除スクリプトを実行するためのコマンドを設定します。
     let mut remove_process = opts.remove_shell.generate();

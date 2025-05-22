@@ -402,10 +402,11 @@ mod tests {
         });
 
         data.relation.provide_cmds.push("my-command".to_string());
-        data.relation.provide_cmds.push("another-command".to_string());
+        data.relation
+            .provide_cmds
+            .push("another-command".to_string());
         data.relation.depend_cmds.push("git".to_string());
         data.relation.depend_cmds.push("make".to_string());
-
 
         println!("{}", data);
     }

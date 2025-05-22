@@ -93,12 +93,10 @@ pub fn project(args: Vec<&Option>) -> Result<(), std::io::Error> {
         "remove" => project_remove(sub_args.to_vec()),
         "purge" => project_purge(sub_args.to_vec()),
         "package" | "pkg" => project_package(sub_args.to_vec()),
-        _ => {
-            Err(std::io::Error::new(
-                std::io::ErrorKind::InvalidInput,
-                format!("Unknown subcommand: {}", sub_cmd.opt_str),
-            ))
-        }
+        _ => Err(std::io::Error::new(
+            std::io::ErrorKind::InvalidInput,
+            format!("Unknown subcommand: {}", sub_cmd.opt_str),
+        )),
     }
 }
 

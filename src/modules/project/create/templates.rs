@@ -29,8 +29,12 @@ struct SetUpItem {
 fn setup_files(setup_list: Vec<SetUpItem>) -> Result<(), io::Error> {
     for item in setup_list {
         // file_creation の結果を直接伝播させ、エラー発生時に詳細な情報を付与する
-        file_creation(&item.path, &item.content)
-            .map_err(|e| Error::new(e.kind(), format!("Failed to create file '{}': {}", item.path, e)))?;
+        file_creation(&item.path, &item.content).map_err(|e| {
+            Error::new(
+                e.kind(),
+                format!("Failed to create file '{}': {}", item.path, e),
+            )
+        })?;
     }
     Ok(())
 }
@@ -95,10 +99,12 @@ pub fn rust() -> Result<(), io::Error> {
     }
 
     // 'cargo init' を実行してRustプロジェクトを初期化
-    let status = Command::new("cargo")
-        .arg("init")
-        .status()
-        .map_err(|e| Error::new(ErrorKind::Other, format!("Failed to execute 'cargo init': {}", e)))?;
+    let status = Command::new("cargo").arg("init").status().map_err(|e| {
+        Error::new(
+            ErrorKind::Other,
+            format!("Failed to execute 'cargo init': {}", e),
+        )
+    })?;
 
     if !status.success() {
         return Err(Error::new(

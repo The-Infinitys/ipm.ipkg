@@ -12,7 +12,8 @@ pub fn get_dir() -> Result<PathBuf, io::Error> {
     loop {
         let metadata_path = current_path.join("package.yaml");
         dprintln!("{}", metadata_path.display()); // .to_str().unwrap() を避ける
-        if is_file_exists(metadata_path.to_str().ok_or_else(|| { // .to_str() の失敗を考慮
+        if is_file_exists(metadata_path.to_str().ok_or_else(|| {
+            // .to_str() の失敗を考慮
             io::Error::new(io::ErrorKind::InvalidInput, "Invalid path characters")
         })?) {
             return Ok(current_path);
@@ -47,11 +48,19 @@ pub fn get_path() -> Result<PathBuf, io::Error> {
 /// ファイルの読み込みやパースに失敗した場合は `io::Error` を `Err` で返します。
 pub fn metadata() -> Result<PackageData, io::Error> {
     let metadata_path = get_path()?; // get_path() のエラーを伝播
-    let read_data = std::fs::read_to_string(&metadata_path)
-        .map_err(|e| io::Error::new(e.kind(), format!("Failed to read {}: {}", metadata_path.display(), e)))?;
+    let read_data = std::fs::read_to_string(&metadata_path).map_err(|e| {
+        io::Error::new(
+            e.kind(),
+            format!("Failed to read {}: {}", metadata_path.display(), e),
+        )
+    })?;
 
-    serde_yaml::from_str::<PackageData>(&read_data)
-        .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, format!("Failed to parse {}: {}", metadata_path.display(), e)))
+    serde_yaml::from_str::<PackageData>(&read_data).map_err(|e| {
+        io::Error::new(
+            io::ErrorKind::InvalidData,
+            format!("Failed to parse {}: {}", metadata_path.display(), e),
+        )
+    })
 }
 
 /// プロジェクトのメタデータを読み込み、標準出力に表示します。

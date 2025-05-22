@@ -157,8 +157,14 @@ impl Version {
                 // 矛盾チェック:
                 // == self以上、>= self以上、> self以上は矛盾
                 if range_data.exactly_equal.as_ref().is_some_and(|v| v >= self)
-                    || range_data.later_or_equal.as_ref().is_some_and(|v| v >= self)
-                    || range_data.strictly_later.as_ref().is_some_and(|v| v >= self)
+                    || range_data
+                        .later_or_equal
+                        .as_ref()
+                        .is_some_and(|v| v >= self)
+                    || range_data
+                        .strictly_later
+                        .as_ref()
+                        .is_some_and(|v| v >= self)
                 {
                     return None;
                 }
@@ -167,11 +173,13 @@ impl Version {
                 // < の既存値があれば、self より大きい場合は更新しない。self より小さい場合は self に更新
                 // なければ self を設定
                 if let Some(ref mut current_earlier_or_equal) = range_data.earlier_or_equal {
-                    if *current_earlier_or_equal >= *self { // <= が >= self なら、<= self に置き換える
+                    if *current_earlier_or_equal >= *self {
+                        // <= が >= self なら、<= self に置き換える
                         *current_earlier_or_equal = self.clone();
                     }
                 } else if let Some(ref mut current_strictly_earlier) = range_data.strictly_earlier {
-                    if *current_strictly_earlier > *self { // < が > self なら、< self に置き換える
+                    if *current_strictly_earlier > *self {
+                        // < が > self なら、< self に置き換える
                         *current_strictly_earlier = self.clone();
                     }
                 } else {
@@ -190,7 +198,8 @@ impl Version {
                 // <= の既存値があれば、self より大きい場合は更新しない。self より小さい場合は self に更新
                 // なければ self を設定
                 if let Some(ref mut current_earlier_or_equal) = range_data.earlier_or_equal {
-                    if *current_earlier_or_equal > *self { // 既存の <= が self よりも大きいなら、selfに更新
+                    if *current_earlier_or_equal > *self {
+                        // 既存の <= が self よりも大きいなら、selfに更新
                         *current_earlier_or_equal = self.clone();
                     }
                 } else {
@@ -225,7 +234,10 @@ impl Version {
                 // 矛盾チェック:
                 // == selfより小さい、< selfより小さいは矛盾
                 if range_data.exactly_equal.as_ref().is_some_and(|v| v < self)
-                    || range_data.strictly_earlier.as_ref().is_some_and(|v| v < self)
+                    || range_data
+                        .strictly_earlier
+                        .as_ref()
+                        .is_some_and(|v| v < self)
                 {
                     return None;
                 }
@@ -233,7 +245,8 @@ impl Version {
                 // >= の既存値があれば、self より小さい場合は更新しない。self より大きい場合は self に更新
                 // なければ self を設定
                 if let Some(ref mut current_later_or_equal) = range_data.later_or_equal {
-                    if *current_later_or_equal < *self { // 既存の >= が self よりも小さいなら、selfに更新
+                    if *current_later_or_equal < *self {
+                        // 既存の >= が self よりも小さいなら、selfに更新
                         *current_later_or_equal = self.clone();
                     }
                 } else {
@@ -244,8 +257,14 @@ impl Version {
                 // 矛盾チェック:
                 // == self以下、<= self以下、< self以下は矛盾
                 if range_data.exactly_equal.as_ref().is_some_and(|v| v <= self)
-                    || range_data.earlier_or_equal.as_ref().is_some_and(|v| v <= self)
-                    || range_data.strictly_earlier.as_ref().is_some_and(|v| v <= self)
+                    || range_data
+                        .earlier_or_equal
+                        .as_ref()
+                        .is_some_and(|v| v <= self)
+                    || range_data
+                        .strictly_earlier
+                        .as_ref()
+                        .is_some_and(|v| v <= self)
                 {
                     return None;
                 }
@@ -253,12 +272,14 @@ impl Version {
                 // > の既存値があれば、self より小さい場合は更新しない。self より大きい場合は self に更新
                 // なければ self を設定
                 if let Some(ref mut current_later_or_equal) = range_data.later_or_equal {
-                    if *current_later_or_equal <= *self { // >= が <= self なら、> self に置き換える
+                    if *current_later_or_equal <= *self {
+                        // >= が <= self なら、> self に置き換える
                         range_data.later_or_equal = None; // >= をクリア
                         range_data.strictly_later = Some(self.clone());
                     }
                 } else if let Some(ref mut current_strictly_later) = range_data.strictly_later {
-                    if *current_strictly_later < *self { // > が < self なら、> self に置き換える
+                    if *current_strictly_later < *self {
+                        // > が < self なら、> self に置き換える
                         *current_strictly_later = self.clone();
                     }
                 } else {
@@ -444,19 +465,29 @@ impl VersionRange {
             Some(range_data) => {
                 // 各制約を順にチェック
                 if let Some(v) = &range_data.strictly_earlier {
-                    if version >= v { return false; }
+                    if version >= v {
+                        return false;
+                    }
                 }
                 if let Some(v) = &range_data.earlier_or_equal {
-                    if version > v { return false; }
+                    if version > v {
+                        return false;
+                    }
                 }
                 if let Some(v) = &range_data.exactly_equal {
-                    if version != v { return false; }
+                    if version != v {
+                        return false;
+                    }
                 }
                 if let Some(v) = &range_data.later_or_equal {
-                    if version < v { return false; }
+                    if version < v {
+                        return false;
+                    }
                 }
                 if let Some(v) = &range_data.strictly_later {
-                    if version <= v { return false; }
+                    if version <= v {
+                        return false;
+                    }
                 }
                 true // 全ての制約を満たす
             }
@@ -472,7 +503,7 @@ impl Display for VersionRange {
     /// 具体的な制約を表示できます。
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self._range_data.as_ref() {
-            None => write!(f, "*"), // "*" と表示
+            None => write!(f, "*"),                          // "*" と表示
             Some(range_data) => write!(f, "{}", range_data), // RangeDataのDisplayに委譲
         }
     }
@@ -531,7 +562,10 @@ mod tests {
         println!("In RangeAll, version1: {}", range_all.compare(&version1));
         let range_exact = VersionRange::from_str("== 1.2.3").unwrap();
         println!("RangeExact: {}", &range_exact);
-        println!("In RangeExact, version1: {}", range_exact.compare(&version1));
+        println!(
+            "In RangeExact, version1: {}",
+            range_exact.compare(&version1)
+        );
 
         let conflict_range = VersionRange::from_str(">= 2.0, < 1.0");
         println!("Conflict Range: {:?}", conflict_range);

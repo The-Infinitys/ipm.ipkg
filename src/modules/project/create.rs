@@ -86,14 +86,17 @@ pub fn create(params: &ProjectParams) -> Result<(), ProjectCreationError> {
 
     // file_creation は Result<Result<(), io::Error>, ...> を返す可能性があるので注意
     // ここでは file_creation が直接 io::Result を返すことを想定
-    file_creation(project_data_filename, &data)
-        .map_err(|e| ProjectCreationError::IoError(e))?; // io::Error を ProjectCreationError::IoError にマップ
+    file_creation(project_data_filename, &data).map_err(|e| ProjectCreationError::IoError(e))?; // io::Error を ProjectCreationError::IoError にマップ
 
     // テンプレートに基づくファイル生成
     match params.project_template {
-        ProjectTemplateType::Default => templates::default().map_err(|e| ProjectCreationError::TemplateError(e.to_string())),
-        ProjectTemplateType::Rust => templates::rust().map_err(|e| ProjectCreationError::TemplateError(e.to_string())),
+        ProjectTemplateType::Default => {
+            templates::default().map_err(|e| ProjectCreationError::TemplateError(e.to_string()))
+        }
+        ProjectTemplateType::Rust => {
+            templates::rust().map_err(|e| ProjectCreationError::TemplateError(e.to_string()))
+        }
     }?; // ここで ? 演算子を使用し、エラーを自動伝播
-    
+
     Ok(())
 }

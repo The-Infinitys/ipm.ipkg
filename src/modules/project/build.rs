@@ -58,7 +58,7 @@ pub fn build(opts: BuildOptions) -> Result<(), String> {
     let target_dir = match target_dir {
         Ok(path) => path,
         Err(e) => {
-            let msg = format!("Error: {}",e);
+            let msg = format!("Error: {}", e);
             eprintln!("{}", msg);
             return Err(msg);
         }

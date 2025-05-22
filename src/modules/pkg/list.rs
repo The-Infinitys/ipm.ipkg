@@ -45,11 +45,27 @@ impl PackageListData {
     /// # 戻り値
     /// 読み込みとパースが成功した場合は `PackageListData` を、失敗した場合は `io::Error` を返します。
     fn from_filepath(list_filepath: &PathBuf) -> Result<PackageListData, io::Error> {
-        let packageslist_str = fs::read_to_string(list_filepath)
-            .map_err(|e| io::Error::new(e.kind(), format!("Failed to read packages list file '{}': {}", list_filepath.display(), e)))?;
+        let packageslist_str = fs::read_to_string(list_filepath).map_err(|e| {
+            io::Error::new(
+                e.kind(),
+                format!(
+                    "Failed to read packages list file '{}': {}",
+                    list_filepath.display(),
+                    e
+                ),
+            )
+        })?;
 
-        serde_yaml::from_str(&packageslist_str)
-            .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, format!("Failed to parse packages list file '{}': {}", list_filepath.display(), e)))
+        serde_yaml::from_str(&packageslist_str).map_err(|e| {
+            io::Error::new(
+                io::ErrorKind::InvalidData,
+                format!(
+                    "Failed to parse packages list file '{}': {}",
+                    list_filepath.display(),
+                    e
+                ),
+            )
+        })
     }
 }
 
@@ -77,8 +93,18 @@ impl Display for PackageListData {
 impl Display for InstalledPackageData {
     /// `InstalledPackageData` を整形して表示します。
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        writeln!(f, "  {}: {}", "Name".bold(), self.info.about.package.name.cyan())?;
-        writeln!(f, "    {}: {}", "Version".bold(), self.info.about.package.version)?;
+        writeln!(
+            f,
+            "  {}: {}",
+            "Name".bold(),
+            self.info.about.package.name.cyan()
+        )?;
+        writeln!(
+            f,
+            "    {}: {}",
+            "Version".bold(),
+            self.info.about.package.version
+        )?;
         writeln!(
             f,
             "    {}: {} <{}>",
@@ -104,14 +130,14 @@ impl Display for InstalledPackageData {
         )?;
         // RelationData も表示する場合
         if !self.info.relation.is_empty() {
-             writeln!(f, "    {}", "Relations:".bold())?;
-             // RelationData の Display 実装を再利用
-             let mut indented_relations = String::new();
-             // RelationData の Display 実装から出力される各行にインデントを追加
-             for line in format!("{}", self.info.relation).lines() {
-                 indented_relations.push_str(&format!("      {}\n", line));
-             }
-             write!(f, "{}", indented_relations)?;
+            writeln!(f, "    {}", "Relations:".bold())?;
+            // RelationData の Display 実装を再利用
+            let mut indented_relations = String::new();
+            // RelationData の Display 実装から出力される各行にインデントを追加
+            for line in format!("{}", self.info.relation).lines() {
+                indented_relations.push_str(&format!("      {}\n", line));
+            }
+            write!(f, "{}", indented_relations)?;
         }
         Ok(())
     }
@@ -156,17 +182,19 @@ pub fn list(args: Vec<&Option>) -> Result<(), std::io::Error> {
     };
 
     // パッケージリストの読み込みと表示
-    let packages_list_data = PackageListData::from_filepath(&target_filepath)
-        .or_else(|e| {
-            // ファイルが存在しない場合（NotFound）は、空のリストとして扱う
-            if e.kind() == io::ErrorKind::NotFound {
-                println!("No packages list found at {}. Assuming empty list.", target_filepath.display());
-                Ok(PackageListData::default())
-            } else {
-                // その他のエラーはそのまま伝播
-                Err(e)
-            }
-        })?;
+    let packages_list_data = PackageListData::from_filepath(&target_filepath).or_else(|e| {
+        // ファイルが存在しない場合（NotFound）は、空のリストとして扱う
+        if e.kind() == io::ErrorKind::NotFound {
+            println!(
+                "No packages list found at {}. Assuming empty list.",
+                target_filepath.display()
+            );
+            Ok(PackageListData::default())
+        } else {
+            // その他のエラーはそのまま伝播
+            Err(e)
+        }
+    })?;
 
     println!("{}", packages_list_data);
     Ok(())

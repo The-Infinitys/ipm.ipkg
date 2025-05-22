@@ -48,16 +48,18 @@ pub fn purge(opts: PurgeOptions) -> Result<(), String> {
     })?;
 
     // プロジェクトのメタデータを読み込む
-    let project_metadata = metadata::metadata().map_err(|e| {
-        format!("Error: Failed to read project metadata: {:?}", e)
-    })?;
+    let project_metadata = metadata::metadata()
+        .map_err(|e| format!("Error: Failed to read project metadata: {:?}", e))?;
 
     // シェルコマンドの準備
     let mut purge_process = opts.purge_shell.generate();
     purge_process
         .current_dir(&target_dir) // プロジェクトディレクトリを作業ディレクトリに設定
         .env("IPKG_PACKAGE_NAME", &project_metadata.about.package.name) // パッケージ名を環境変数に設定
-        .env("IPKG_PACKAGE_VERSION", project_metadata.about.package.version.to_string()) // パッケージバージョンを環境変数に設定
+        .env(
+            "IPKG_PACKAGE_VERSION",
+            project_metadata.about.package.version.to_string(),
+        ) // パッケージバージョンを環境変数に設定
         .arg("ipkg/scripts/purge.sh"); // 実行するスクリプトのパス
 
     // パージ処理の実行
@@ -70,7 +72,12 @@ pub fn purge(opts: PurgeOptions) -> Result<(), String> {
         Ok(())
     } else {
         // エラーコードがあればそれも表示
-        let code_info = status.code().map_or("".to_string(), |c| format!(" (exit code: {})", c));
-        Err(format!("Purge process failed with status: {}{}", status, code_info))
+        let code_info = status
+            .code()
+            .map_or("".to_string(), |c| format!(" (exit code: {})", c));
+        Err(format!(
+            "Purge process failed with status: {}{}",
+            status, code_info
+        ))
     }
 }

@@ -45,7 +45,7 @@ fn main() -> Result<(), std::io::Error> {
         SubCommand::Version => messages::version()?,
         SubCommand::Project => project::project(sub_opts)?,
         SubCommand::System => system::system(sub_opts)?,
-        SubCommand::Package => {}//pkg::pkg(sub_opts)?,
+        SubCommand::Package => {} //pkg::pkg(sub_opts)?,
         SubCommand::Unknown => messages::unknown()?,
     }
 
