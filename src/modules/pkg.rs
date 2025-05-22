@@ -447,7 +447,7 @@ mod tests {
     }
 }
 
-pub fn pkg(args: Vec<&Option>)->Result<(),std::io::Error> {
+pub fn pkg(args: Vec<&Option>) -> Result<(), std::io::Error> {
     if args.is_empty() {
         return messages::unknown();
     }

@@ -66,7 +66,7 @@ pub fn welcome() {
 /// アプリケーションのバージョン情報を表示します。
 ///
 /// `[name] [version] ([architecture])` の形式で標準出力に表示します。
-pub fn version()->Result<(),std::io::Error> {
+pub fn version() -> Result<(), std::io::Error> {
     let cargo_package = get_info();
     println!(
         "{} {} ({})",
@@ -84,7 +84,7 @@ pub fn version()->Result<(),std::io::Error> {
 ///
 /// * `args`: ヘルプメッセージの種類を決定するために使用される引数のベクタ。
 ///   現在の実装では、最初の引数のみが `install` かどうかの判定に使用されます。
-pub fn help(args: Vec<&Option>)->Result<(),std::io::Error> {
+pub fn help(args: Vec<&Option>) -> Result<(), std::io::Error> {
     let help_type: HelpType = if args.is_empty() {
         HelpType::General
     } else {
@@ -134,7 +134,10 @@ fn show_help(help_type: HelpType) {
 }
 
 /// 不明なヘルプタイプが指定された場合にエラーメッセージを表示します。
-pub fn unknown() ->Result<(),std::io::Error>{
+pub fn unknown() -> Result<(), std::io::Error> {
     eprintln!("unknown command:\n  {}", cmd_str());
-    Err(std::io::Error::new(std::io::ErrorKind::Other, "unknown command"))
+    Err(std::io::Error::new(
+        std::io::ErrorKind::Other,
+        "unknown command",
+    ))
 }
