@@ -5,8 +5,8 @@ use colored::Colorize;
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 pub mod depend;
-pub mod list;
 mod install;
+pub mod list;
 use super::messages;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -286,8 +286,6 @@ impl Display for PackageVersion {
     }
 }
 
-
-
 impl Default for AuthorAboutData {
     fn default() -> Self {
         AuthorAboutData {
@@ -305,7 +303,6 @@ impl Default for PackageAboutData {
         }
     }
 }
-
 
 impl Default for PackageRange {
     fn default() -> Self {
