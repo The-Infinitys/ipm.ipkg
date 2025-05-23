@@ -250,7 +250,7 @@ fn package_data() -> Result<(), String> {
         zip.start_file(path_in_zip, options)
             .map_err(|e| format!("Failed to start file '{}' in zip: {}", path_in_zip, e))?;
 
-        let mut f = std::fs::File::open(&file_path).map_err(|e| {
+        let mut f = std::fs::File::open(file_path).map_err(|e| {
             format!(
                 "Failed to open file for zipping '{}': {}",
                 file_path.display(),
