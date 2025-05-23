@@ -1,8 +1,9 @@
 use super::ExecShell;
+use super::metadata;
+use crate::dprintln;
 use colored::Colorize;
 use std::fmt::{self, Display};
 use std::str::FromStr;
-
 /// Defines the options for the packaging process.
 #[derive(Default)]
 pub struct PackageOptions {
@@ -82,7 +83,45 @@ impl Display for PackageOptions {
 /// Always returns `Ok(())` for now, but in a full implementation, it would
 /// return `Result<(), String>` to indicate success or an error message.
 pub fn package(opts: PackageOptions) -> Result<(), String> {
-    println!("{}", opts);
-    eprintln!("Sorry, this function is not available yet.");
-    Ok(())
+    dprintln!("{}", &opts); // デバッグ情報を出力
+
+    // プロジェクトのメタデータディレクトリを取得
+    let target_dir = metadata::get_dir().map_err(|_| {
+        "Error: Couldn't find Ipkg Directory. Make sure you are in an ipkg project.".to_string()
+    })?;
+
+    // プロジェクトのメタデータを読み込む
+    let project_metadata = metadata::metadata()
+        .map_err(|e| format!("Error: Failed to read project metadata: {:?}", e))?;
+
+    // シェルコマンドの準備
+    let mut package_process = opts.package_shell.generate();
+    package_process
+        .current_dir(&target_dir) // プロジェクトディレクトリを作業ディレクトリに設定
+        .env("IPKG_PACKAGE_NAME", &project_metadata.about.package.name) // パッケージ名を環境変数に設定
+        .env(
+            "IPKG_PACKAGE_VERSION",
+            project_metadata.about.package.version.to_string(),
+        ) // パッケージバージョンを環境変数に設定
+        .env("IPKG_PACKAGE_TARGET", opts.target.to_string()) // パッケージターゲットを環境変数に設定
+        .arg("ipkg/scripts/package.sh"); // 実行するスクリプトのパス
+
+    // パージ処理の実行
+    let status = package_process
+        .status()
+        .map_err(|e| format!("Failed to execute package process: {}", e))?;
+
+    // 実行結果の確認
+    if status.success() {
+        Ok(())
+    } else {
+        // エラーコードがあればそれも表示
+        let code_info = status
+            .code()
+            .map_or("".to_string(), |c| format!(" (exit code: {})", c));
+        Err(format!(
+            "Package process failed with status: {}{}",
+            status, code_info
+        ))
+    }
 }
