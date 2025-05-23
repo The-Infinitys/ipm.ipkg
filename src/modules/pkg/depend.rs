@@ -1,11 +1,13 @@
-use super::list::PackageListData;
 use super::super::version::Version;
+use super::list::PackageListData;
 use super::{PackageData, PackageRange, RelationData};
 use crate::utils::shell;
 use std::collections::HashMap;
 
 /// インストール済みのパッケージから、実パッケージと利用可能なパッケージ（実パッケージと仮想パッケージ）のマップを構築します。
-fn build_package_maps(installed_packages: &PackageListData) -> (HashMap<String, Vec<Version>>, HashMap<String, Vec<Version>>) {
+fn build_package_maps(
+    installed_packages: &PackageListData,
+) -> (HashMap<String, Vec<Version>>, HashMap<String, Vec<Version>>) {
     let mut real_packages = HashMap::new();
     let mut available_packages = HashMap::new();
     for p in &installed_packages.installed_packages {
@@ -113,11 +115,11 @@ pub fn has_conflicts(package: &PackageData, installed_packages: &PackageListData
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use super::super::list::{InstalledPackageData, PackageListData};
     use super::super::{
         AboutData, PackageAboutData, PackageData, PackageRange, PackageVersion, RelationData,
     };
+    use super::*;
     use crate::modules::version::{Version, VersionRange};
     use std::str::FromStr;
 
