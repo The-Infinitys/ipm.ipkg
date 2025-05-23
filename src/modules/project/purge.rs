@@ -22,12 +22,7 @@ impl Display for PurgeOptions {
             "purge-shell".green().bold(),
             self.purge_shell
         )?;
-        writeln!(
-            f,
-            "  {}: {}",
-            "purge-mode".green().bold(),
-            self.purge_mode
-        )?;
+        writeln!(f, "  {}: {}", "purge-mode".green().bold(), self.purge_mode)?;
         Ok(())
     }
 }

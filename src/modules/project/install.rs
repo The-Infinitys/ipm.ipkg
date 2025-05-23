@@ -1,10 +1,10 @@
+use super::ExecMode;
 use super::ExecShell;
 use super::metadata::{self, metadata};
 use crate::dprintln;
 use crate::modules::version::Version;
 use colored::Colorize;
 use std::fmt::{self, Display};
-use super::ExecMode;
 use std::process::Command;
 #[derive(Default)]
 pub struct InstallOptions {
