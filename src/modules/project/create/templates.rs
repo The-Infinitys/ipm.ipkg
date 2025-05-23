@@ -82,6 +82,10 @@ pub fn default() -> Result<(), io::Error> {
             path: "ipkg/scripts/package/purge.sh".to_string(),
             content: include_str!("templates/default/ipkg/scripts/package/purge.sh").to_string(),
         },
+        SetUpItem {
+            path: "ipkg/scripts/README.md".to_string(),
+            content: include_str!("templates/script-README.md").to_string(),
+        },
     ];
     setup_files(setup_list)
 }
@@ -158,6 +162,113 @@ pub fn rust() -> Result<(), io::Error> {
         SetUpItem {
             path: "ipkg/scripts/package/purge.sh".to_string(),
             content: include_str!("templates/rust/ipkg/scripts/package/purge.sh").to_string(),
+        },
+        SetUpItem {
+            path: "ipkg/scripts/README.md".to_string(),
+            content: include_str!("templates/script-README.md").to_string(),
+        },
+    ];
+    setup_files(setup_list)
+}
+
+/// Python プロジェクトテンプレートを設定します。
+///
+/// この関数は、最初にシステムに `python3` コマンドがインストールされているかを確認します。
+/// `python3` が利用可能な場合、`python3 -m venv venv` を実行して仮想環境を初期化し、
+/// その後、基本的なPythonプロジェクトファイル (`src/main.py`, `requirements.txt`, `.gitignore`) と、
+/// ipkg固有のビルド、インストール、削除、パージスクリプトを `ipkg/scripts/` ディレクトリ内に配置します。
+///
+/// # 戻り値
+///
+/// テンプレートの設定が成功した場合は `Ok(())`、`python3` が見つからない場合や
+/// コマンドの実行またはファイル作成に失敗した場合は `std::io::Error` を返します。
+pub fn python() -> Result<(), io::Error> {
+    // 'python3' コマンドの利用可能性をチェック
+    if !shell::is_cmd_available("python3") {
+        let python_url = "https://www.python.org/downloads/";
+        eprintln!("Error: 'python3' command not found.");
+        eprintln!("To create a Python project, you need to install Python 3.");
+        eprintln!("Please visit {} for installation instructions.", python_url);
+        return Err(Error::new(
+            ErrorKind::NotFound,
+            "python3 command not found. Please install Python 3.",
+        ));
+    }
+
+    // 'python3 -m venv venv' を実行して仮想環境を初期化
+    // これは 'cargo init' がプロジェクト環境を作成するのに似ています。
+    let venv_status = Command::new("python3")
+        .args(["-m", "venv", "venv"]) // 'venv' という名前のフォルダを作成します
+        .status()
+        .map_err(|e| {
+            Error::new(
+                ErrorKind::Other,
+                format!("Failed to execute 'python3 -m venv venv': {}", e),
+            )
+        })?;
+
+    if !venv_status.success() {
+        return Err(Error::new(
+            ErrorKind::Other,
+            format!(
+                "'python3 -m venv venv' command failed with exit status: {}",
+                venv_status
+            ),
+        ));
+    }
+    eprintln!("Virtual environment 'venv' created successfully in the current directory.");
+
+    // ipkg スクリプトと基本的なPythonファイルをプロジェクトに追加
+    let setup_list = vec![
+        // ipkg スクリプト (Pythonプロジェクト向け)
+        SetUpItem {
+            path: "ipkg/scripts/build.sh".to_string(),
+            content: include_str!("templates/python/ipkg/scripts/build.sh").to_string(),
+        },
+        SetUpItem {
+            path: "ipkg/scripts/install.sh".to_string(),
+            content: include_str!("templates/python/ipkg/scripts/install.sh").to_string(),
+        },
+        SetUpItem {
+            path: "ipkg/scripts/remove.sh".to_string(),
+            content: include_str!("templates/python/ipkg/scripts/remove.sh").to_string(),
+        },
+        SetUpItem {
+            path: "ipkg/scripts/purge.sh".to_string(),
+            content: include_str!("templates/python/ipkg/scripts/purge.sh").to_string(),
+        },
+        SetUpItem {
+            path: "ipkg/scripts/package.sh".to_string(),
+            content: include_str!("templates/python/ipkg/scripts/package.sh").to_string(),
+        },
+        SetUpItem {
+            path: "ipkg/scripts/package/install.sh".to_string(),
+            content: include_str!("templates/python/ipkg/scripts/package/install.sh").to_string(),
+        },
+        SetUpItem {
+            path: "ipkg/scripts/package/remove.sh".to_string(),
+            content: include_str!("templates/python/ipkg/scripts/package/remove.sh").to_string(),
+        },
+        SetUpItem {
+            path: "ipkg/scripts/package/purge.sh".to_string(),
+            content: include_str!("templates/python/ipkg/scripts/package/purge.sh").to_string(),
+        },
+        SetUpItem {
+            path: "ipkg/scripts/README.md".to_string(),
+            content: include_str!("templates/script-README.md").to_string(), // 共通のREADMEを使用
+        },
+        // 基本的なPythonプロジェクトファイル
+        SetUpItem {
+            path: "src/main.py".to_string(),
+            content: include_str!("templates/python/src/main.py").to_string(),
+        },
+        SetUpItem {
+            path: "requirements.txt".to_string(),
+            content: include_str!("templates/python/requirements.txt").to_string(),
+        },
+        SetUpItem {
+            path: ".gitignore".to_string(),
+            content: include_str!("templates/python/.gitignore").to_string(),
         },
     ];
     setup_files(setup_list)

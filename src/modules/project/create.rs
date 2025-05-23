@@ -12,6 +12,7 @@ pub enum ProjectTemplateType {
     #[default] // Default トレイトの実装でデフォルトを Default に設定
     Default,
     Rust,
+    Python,
 }
 
 impl FromStr for ProjectTemplateType {
@@ -22,6 +23,7 @@ impl FromStr for ProjectTemplateType {
         match s.to_ascii_lowercase().as_str() {
             "default" => Ok(Self::Default),
             "rust" => Ok(Self::Rust),
+            "python" => Ok(Self::Python),
             _ => Err(format!("Unavailable Template: '{}'", s)),
         }
     }
@@ -51,6 +53,7 @@ impl Display for ProjectTemplateType {
         let template_str = match self {
             ProjectTemplateType::Default => "default",
             ProjectTemplateType::Rust => "rust",
+            ProjectTemplateType::Python => "python",
         };
         write!(f, "{}", template_str)
     }
@@ -100,6 +103,9 @@ pub fn create(params: &ProjectParams) -> Result<(), ProjectCreationError> {
         }
         ProjectTemplateType::Rust => {
             templates::rust().map_err(|e| ProjectCreationError::Template(e.to_string()))
+        }
+        ProjectTemplateType::Python => {
+            templates::python().map_err(|e| ProjectCreationError::Template(e.to_string()))
         }
     }?; // ここで ? 演算子を使用し、エラーを自動伝播
 
