@@ -21,6 +21,21 @@ use std::fmt::{self, Display};
 use std::process::Command;
 
 #[derive(Default)]
+pub enum ExecMode {
+    #[default]
+    Local,
+    Global,
+}
+impl Display for ExecMode {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ExecMode::Local => write!(f, "local"),
+            ExecMode::Global => write!(f, "global"),
+        }
+    }
+}
+
+#[derive(Default)]
 pub enum ExecShell {
     #[default]
     RBash,
@@ -183,10 +198,10 @@ fn project_install(args: Vec<&Option>) -> Result<(), std::io::Error> {
                 })?;
             }
             "--local" => {
-                install_options.install_mode = install::InstallMode::Local;
+                install_options.install_mode = ExecMode::Local;
             }
             "--global" => {
-                install_options.install_mode = install::InstallMode::Global;
+                install_options.install_mode = ExecMode::Global;
             }
             _ => {
                 eprintln!("Unknown Option: {}", arg.opt_str);
@@ -215,6 +230,12 @@ fn project_remove(args: Vec<&Option>) -> Result<(), std::io::Error> {
                     )
                 })?;
             }
+            "--local" => {
+                remove_options.remove_mode = ExecMode::Local;
+            }
+            "--global" => {
+                remove_options.remove_mode = ExecMode::Global;
+            }
             _ => {
                 eprintln!("Unknown Option: {}", arg.opt_str);
                 eprintln!("Available Options: --shell|--sh");
@@ -241,6 +262,12 @@ fn project_purge(args: Vec<&Option>) -> Result<(), std::io::Error> {
                         format!("Error parsing shell option: {}", e),
                     )
                 })?;
+            }
+            "--local" => {
+                purge_options.purge_mode = ExecMode::Local;
+            }
+            "--global" => {
+                purge_options.purge_mode = ExecMode::Global;
             }
             _ => {
                 eprintln!("Unknown Option: {}", arg.opt_str);

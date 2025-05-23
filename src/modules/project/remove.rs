@@ -3,12 +3,13 @@ use super::metadata; // metadata モジュール全体をインポート
 use crate::dprintln;
 use colored::Colorize;
 use std::fmt::{self, Display};
-
+use super::ExecMode;
 /// プロジェクト削除時のオプションを定義する構造体です。
 #[derive(Default)]
 pub struct RemoveOptions {
     /// 削除スクリプトを実行するシェルを指定します。
     pub remove_shell: ExecShell,
+    pub remove_mode: ExecMode,
 }
 
 impl Display for RemoveOptions {
@@ -20,6 +21,12 @@ impl Display for RemoveOptions {
             "  {}: {}",
             "remove-shell".green().bold(),
             self.remove_shell
+        )?;
+        writeln!(
+            f,
+            "  {}: {}",
+            "remove-mode".green().bold(),
+            self.remove_mode
         )?;
         Ok(())
     }
@@ -65,6 +72,7 @@ pub fn remove(opts: RemoveOptions) -> Result<(), String> {
             "IPKG_PROJECT_VERSION",
             project_metadata.about.package.version.to_string(),
         )
+        .env("IPKG_REMOVE_MODE", opts.remove_mode.to_string())  
         .arg("ipkg/scripts/remove.sh");
 
     // 削除プロセスを実行し、結果をハンドリングします。

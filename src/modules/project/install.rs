@@ -4,25 +4,12 @@ use crate::dprintln;
 use crate::modules::version::Version;
 use colored::Colorize;
 use std::fmt::{self, Display};
+use super::ExecMode;
 use std::process::Command;
 #[derive(Default)]
 pub struct InstallOptions {
     pub install_shell: ExecShell,
-    pub install_mode: InstallMode,
-}
-#[derive(Default)]
-pub enum InstallMode {
-    #[default]
-    Local,
-    Global,
-}
-impl Display for InstallMode {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            InstallMode::Local => write!(f, "local"),
-            InstallMode::Global => write!(f, "global"),
-        }
-    }
+    pub install_mode: ExecMode,
 }
 impl Display for InstallOptions {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -66,7 +53,7 @@ pub fn install(opts: InstallOptions) -> Result<(), String> {
         target_dir: &std::path::Path,
         project_name: &str,
         project_version: &Version,
-        install_mode: &InstallMode,
+        install_mode: &ExecMode,
     ) {
         cmd.current_dir(target_dir)
             .env("IPKG_PROJECT_NAME", project_name)

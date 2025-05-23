@@ -1,14 +1,15 @@
+use super::ExecMode;
 use super::ExecShell;
 use super::metadata; // metadata モジュール全体をインポート
 use crate::dprintln;
 use colored::Colorize;
 use std::fmt::{self, Display};
-
 /// パッケージのパージ（完全削除）に関するオプションを保持する構造体。
 #[derive(Default)]
 pub struct PurgeOptions {
     /// パージ処理を実行するシェル。
     pub purge_shell: ExecShell,
+    pub purge_mode: ExecMode,
 }
 
 impl Display for PurgeOptions {
@@ -20,6 +21,12 @@ impl Display for PurgeOptions {
             "  {}: {}",
             "purge-shell".green().bold(),
             self.purge_shell
+        )?;
+        writeln!(
+            f,
+            "  {}: {}",
+            "purge-mode".green().bold(),
+            self.purge_mode
         )?;
         Ok(())
     }
@@ -58,7 +65,8 @@ pub fn purge(opts: PurgeOptions) -> Result<(), String> {
         .env(
             "IPKG_PROJECT_VERSION",
             project_metadata.about.package.version.to_string(),
-        ) // パッケージバージョンを環境変数に設定
+        )
+        .env("IPKG_PURGE_MODE", opts.purge_mode.to_string()) // パッケージバージョンを環境変数に設定
         .arg("ipkg/scripts/purge.sh"); // 実行するスクリプトのパス
 
     // パージ処理の実行
