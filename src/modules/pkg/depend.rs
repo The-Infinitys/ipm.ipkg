@@ -128,7 +128,7 @@ mod tests {
         let mut package = PackageData::default();
         package.relation.depend = vec![vec![PackageRange {
             name: "dep1".to_string(),
-            range: VersionRange::from_str(">=1.0").unwrap(),
+            range: VersionRange::from_str(">= 1.0").unwrap(),
         }]];
 
         let mut installed_packages = PackageListData::default();
@@ -158,7 +158,7 @@ mod tests {
         let mut package3 = PackageData::default();
         package3.relation.depend = vec![vec![PackageRange {
             name: "virtual-pkg".to_string(),
-            range: VersionRange::from_str(">=1.0").unwrap(),
+            range: VersionRange::from_str(">= 1.0").unwrap(),
         }]];
 
         let mut installed_packages2 = PackageListData::default();
@@ -213,7 +213,7 @@ mod tests {
         let mut package = PackageData::default();
         package.relation.conflicts = vec![PackageRange {
             name: "conflict1".to_string(),
-            range: VersionRange::from_str(">=1.0").unwrap(),
+            range: VersionRange::from_str(">= 1.0").unwrap(),
         }];
 
         let mut installed_packages = PackageListData::default();
