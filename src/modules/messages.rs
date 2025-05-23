@@ -1,6 +1,9 @@
 //! このモジュールは、アプリケーションのメッセージ（ウェルカムメッセージ、バージョン情報、ヘルプメッセージなど）の表示を扱います。
 //! Cargo.tomlからパッケージ情報を取得し、メッセージテンプレート内のプレースホルダーを置換する機能を提供します。
+use crate::utils::shell;
 use cmd_arg::cmd_arg::{Option, cmd_str}; // `Option`構造体が外部モジュールにあることを示しています
+use termimad::crossterm::style::{Attribute::*, Color::*};
+use termimad::*; // `termimad`は、ターミナルでのテキスト表示を扱うライブラリです。
 /// Cargo.tomlから取得したパッケージ情報を保持する構造体。
 ///
 /// `CARGO_PKG_NAME`, `CARGO_PKG_VERSION`, `std::env::consts::ARCH` 環境変数から情報を取得します。
@@ -140,4 +143,17 @@ pub fn unknown() -> Result<(), std::io::Error> {
         std::io::ErrorKind::InvalidInput,
         "No subcommand provided",
     ))
+}
+/// マニュアルメッセージを表示します。
+/// ページャー
+pub fn manual() -> Result<(), std::io::Error> {
+    // start with the default skin
+    let mut skin = MadSkin::default();
+    // let's decide bold is in light gray
+    skin.bold.set_fg(gray(20));
+    // let's make strikeout not striked out but red, with no specific background, and bold
+    skin.strikeout = CompoundStyle::new(Some(Red), None, Bold.into());
+    let manual_str = insert_info(include_str!("./messages/manual.md"));
+    shell::pager(format!("{}", skin.term_text(&manual_str)));
+    Ok(())
 }

@@ -2,7 +2,6 @@ use cmd_arg::cmd_arg::Option;
 use cmd_arg::cmd_arg::get as get_cmd_data;
 use ipkg::dprintln;
 use ipkg::modules::{messages, project, system};
-use ipkg::utils::shell::{self, ExitStatus};
 
 fn main() -> Result<(), std::io::Error> {
     let command_data = get_cmd_data();
@@ -12,7 +11,7 @@ fn main() -> Result<(), std::io::Error> {
     // 引数がない場合は早期リターン
     if opts.is_empty() {
         messages::welcome();
-        shell::exit(ExitStatus::NoArgs);
+        return Err(std::io::Error::from(std::io::ErrorKind::InvalidInput));
     }
 
     let command = &opts[0];
@@ -21,6 +20,7 @@ fn main() -> Result<(), std::io::Error> {
     // SubCommand enumの定義はそのまま
     enum SubCommand {
         Help,
+        Manual,
         Version,
         Project,
         Package,
@@ -33,6 +33,7 @@ fn main() -> Result<(), std::io::Error> {
     // OptionTypeに関わらず、opt_strで直接マッチング
     let sub_command: SubCommand = match opt_str {
         "--help" | "-h" | "help" => SubCommand::Help,
+        "--manual" | "-m" | "manual" => SubCommand::Manual,
         "--version" | "-v" | "version" => SubCommand::Version,
         "project" => SubCommand::Project,
         "system" => SubCommand::System,
@@ -43,6 +44,7 @@ fn main() -> Result<(), std::io::Error> {
     match sub_command {
         SubCommand::Help => messages::help(sub_opts)?,
         SubCommand::Version => messages::version()?,
+        SubCommand::Manual => messages::manual()?,
         SubCommand::Project => project::project(sub_opts)?,
         SubCommand::System => system::system(sub_opts)?,
         SubCommand::Package => {} //pkg::pkg(sub_opts)?,
