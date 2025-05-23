@@ -98,12 +98,12 @@ pub fn package(opts: PackageOptions) -> Result<(), String> {
     let mut package_process = opts.package_shell.generate();
     package_process
         .current_dir(&target_dir) // プロジェクトディレクトリを作業ディレクトリに設定
-        .env("IPKG_PACKAGE_NAME", &project_metadata.about.package.name) // パッケージ名を環境変数に設定
+        .env("IPKG_PROJECT_NAME", &project_metadata.about.package.name) // パッケージ名を環境変数に設定
         .env(
-            "IPKG_PACKAGE_VERSION",
+            "IPKG_PROJECT_VERSION",
             project_metadata.about.package.version.to_string(),
         ) // パッケージバージョンを環境変数に設定
-        .env("IPKG_PACKAGE_TARGET", opts.target.to_string()) // パッケージターゲットを環境変数に設定
+        .env("IPKG_PROJECT_TARGET", opts.target.to_string()) // パッケージターゲットを環境変数に設定
         .arg("ipkg/scripts/package.sh"); // 実行するスクリプトのパス
 
     // パージ処理の実行

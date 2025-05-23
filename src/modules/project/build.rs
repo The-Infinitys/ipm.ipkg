@@ -75,8 +75,8 @@ pub fn build(opts: BuildOptions) -> Result<(), String> {
     ) {
         let build_mode = build_mode.to_string();
         cmd.current_dir(target_dir)
-            .env("IPKG_PACKAGE_NAME", project_name)
-            .env("IPKG_PACKAGE_VERSION", project_version.to_string())
+            .env("IPKG_PROJECT_NAME", project_name)
+            .env("IPKG_PROJECT_VERSION", project_version.to_string())
             .env("IPKG_BUILD_MODE", build_mode)
             .arg("ipkg/scripts/build.sh");
     }

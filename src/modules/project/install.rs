@@ -69,8 +69,8 @@ pub fn install(opts: InstallOptions) -> Result<(), String> {
         install_mode: &InstallMode,
     ) {
         cmd.current_dir(target_dir)
-            .env("IPKG_PACKAGE_NAME", project_name)
-            .env("IPKG_PACKAGE_VERSION", project_version.to_string())
+            .env("IPKG_PROJECT_NAME", project_name)
+            .env("IPKG_PROJECT_VERSION", project_version.to_string())
             .env("IPKG_INSTALL_MODE", install_mode.to_string())
             .arg("ipkg/scripts/install.sh");
     }

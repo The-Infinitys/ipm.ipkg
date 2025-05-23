@@ -54,9 +54,9 @@ pub fn purge(opts: PurgeOptions) -> Result<(), String> {
     let mut purge_process = opts.purge_shell.generate();
     purge_process
         .current_dir(&target_dir) // プロジェクトディレクトリを作業ディレクトリに設定
-        .env("IPKG_PACKAGE_NAME", &project_metadata.about.package.name) // パッケージ名を環境変数に設定
+        .env("IPKG_PROJECT_NAME", &project_metadata.about.package.name) // パッケージ名を環境変数に設定
         .env(
-            "IPKG_PACKAGE_VERSION",
+            "IPKG_PROJECT_VERSION",
             project_metadata.about.package.version.to_string(),
         ) // パッケージバージョンを環境変数に設定
         .arg("ipkg/scripts/purge.sh"); // 実行するスクリプトのパス

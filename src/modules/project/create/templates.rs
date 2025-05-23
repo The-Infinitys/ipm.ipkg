@@ -51,10 +51,6 @@ fn setup_files(setup_list: Vec<SetUpItem>) -> Result<(), io::Error> {
 pub fn default() -> Result<(), io::Error> {
     let setup_list = vec![
         SetUpItem {
-            path: "src/main.sh".to_string(),
-            content: include_str!("templates/default/src/main.sh").to_string(),
-        },
-        SetUpItem {
             path: "ipkg/scripts/build.sh".to_string(),
             content: include_str!("templates/default/ipkg/scripts/build.sh").to_string(),
         },
@@ -69,6 +65,22 @@ pub fn default() -> Result<(), io::Error> {
         SetUpItem {
             path: "ipkg/scripts/purge.sh".to_string(),
             content: include_str!("templates/default/ipkg/scripts/purge.sh").to_string(),
+        },
+        SetUpItem {
+            path: "ipkg/scripts/package.sh".to_string(),
+            content: include_str!("templates/default/ipkg/scripts/package.sh").to_string(),
+        },
+        SetUpItem {
+            path: "ipkg/scripts/package/install.sh".to_string(),
+            content: include_str!("templates/default/ipkg/scripts/package/install.sh").to_string(),
+        },
+        SetUpItem {
+            path: "ipkg/scripts/package/remove.sh".to_string(),
+            content: include_str!("templates/default/ipkg/scripts/package/remove.sh").to_string(),
+        },
+        SetUpItem {
+            path: "ipkg/scripts/package/purge.sh".to_string(),
+            content: include_str!("templates/default/ipkg/scripts/package/purge.sh").to_string(),
         },
     ];
     setup_files(setup_list)
@@ -130,6 +142,22 @@ pub fn rust() -> Result<(), io::Error> {
         SetUpItem {
             path: "ipkg/scripts/purge.sh".to_string(),
             content: include_str!("templates/rust/ipkg/scripts/purge.sh").to_string(),
+        },
+        SetUpItem {
+            path: "ipkg/scripts/package.sh".to_string(),
+            content: include_str!("templates/rust/ipkg/scripts/package.sh").to_string(),
+        },
+        SetUpItem {
+            path: "ipkg/scripts/package/install.sh".to_string(),
+            content: include_str!("templates/rust/ipkg/scripts/package/install.sh").to_string(),
+        },
+        SetUpItem {
+            path: "ipkg/scripts/package/remove.sh".to_string(),
+            content: include_str!("templates/rust/ipkg/scripts/package/remove.sh").to_string(),
+        },
+        SetUpItem {
+            path: "ipkg/scripts/package/purge.sh".to_string(),
+            content: include_str!("templates/rust/ipkg/scripts/package/purge.sh").to_string(),
         },
     ];
     setup_files(setup_list)

@@ -60,9 +60,9 @@ pub fn remove(opts: RemoveOptions) -> Result<(), String> {
     // コマンドの作業ディレクトリ、環境変数、および実行するスクリプトを設定します。
     remove_process
         .current_dir(&target_dir)
-        .env("IPKG_PACKAGE_NAME", &project_metadata.about.package.name)
+        .env("IPKG_PROJECT_NAME", &project_metadata.about.package.name)
         .env(
-            "IPKG_PACKAGE_VERSION",
+            "IPKG_PROJECT_VERSION",
             project_metadata.about.package.version.to_string(),
         )
         .arg("ipkg/scripts/remove.sh");
