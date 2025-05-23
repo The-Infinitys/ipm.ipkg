@@ -13,10 +13,10 @@ use super::metadata;
 use colored::Colorize;
 use std::fmt::{self, Display};
 // std::io::Write was unused, so it's removed.
+use crate::dprintln;
 use std::str::FromStr;
-use zip::write::FileOptions; // Import FileOptions
 use zip::CompressionMethod; // Import CompressionMethod
-use crate::dprintln; // Assuming dprintln! is defined in your crate
+use zip::write::FileOptions; // Import FileOptions // Assuming dprintln! is defined in your crate
 /// Defines the options for the packaging process.
 #[derive(Default)] // Added Debug
 pub struct PackageOptions {
@@ -82,14 +82,7 @@ impl Display for PackageOptions {
 
 /// Initiates the packaging process based on the provided options.
 pub fn package(opts: PackageOptions) -> Result<(), String> {
-    // Assuming dprintln! is available from elsewhere (e.g. crate::utils::dprintln or just dprintln! if exported globally)
-    // Make sure your dprintln! macro is defined (e.g. in src/utils/debug.rs) and exported with #[macro_export]
-    // and that the module structure allows its use here.
-    // For example, if dprintln is in src/utils/debug.rs:
-    // crate::dprintln!("Starting packaging process with options: {:?}", &opts);
-    // Or if your project structure makes it available directly:
     dprintln!("Starting packaging process with options: {}", &opts);
-
 
     let target_dir = metadata::get_dir().map_err(|e| {
         format!("Error: Couldn't find Ipkg Directory. Make sure you are in an ipkg project. Details: {:?}", e)
@@ -98,7 +91,11 @@ pub fn package(opts: PackageOptions) -> Result<(), String> {
 
     let project_metadata = metadata::metadata()
         .map_err(|e| format!("Error: Failed to read project metadata: {:?}", e))?;
-    dprintln!("Project metadata loaded for: {} version {}", project_metadata.about.package.name, project_metadata.about.package.version);
+    dprintln!(
+        "Project metadata loaded for: {} version {}",
+        project_metadata.about.package.name,
+        project_metadata.about.package.version
+    );
 
     let mut package_process_cmd = opts.package_shell.generate();
     package_process_cmd
@@ -109,22 +106,27 @@ pub fn package(opts: PackageOptions) -> Result<(), String> {
             project_metadata.about.package.version.to_string(),
         )
         .env("IPKG_PROJECT_TARGET", opts.target.to_string());
-    
+
     let script_path = target_dir.join("ipkg").join("scripts").join("package.sh");
-    package_process_cmd.arg(&script_path); 
+    package_process_cmd.arg(&script_path);
     dprintln!("Executing script: {:?}", &package_process_cmd);
 
-    let status = package_process_cmd
-        .status()
-        .map_err(|e| format!("Failed to execute package script '{}': {}", script_path.display(), e))?;
-    
+    let status = package_process_cmd.status().map_err(|e| {
+        format!(
+            "Failed to execute package script '{}': {}",
+            script_path.display(),
+            e
+        )
+    })?;
+
     if status.success() {
         dprintln!("Package script executed successfully.");
         package_data()
     } else {
-        let code_info = status
-            .code()
-            .map_or_else(|| "killed by signal".to_string(), |c| format!("exit code: {}", c));
+        let code_info = status.code().map_or_else(
+            || "killed by signal".to_string(),
+            |c| format!("exit code: {}", c),
+        );
         Err(format!(
             "Package script failed with status: {}. {}",
             status, code_info
@@ -141,34 +143,65 @@ fn package_data() -> Result<(), String> {
     dprintln!("Package source directory: {}", package_dir.display());
 
     if !package_dir.exists() {
-        dprintln!("Package directory does not exist. Creating: {}", package_dir.display());
-        std::fs::create_dir_all(&package_dir)
-            .map_err(|e| format!("Failed to create package directory '{}': {}", package_dir.display(), e))?;
+        dprintln!(
+            "Package directory does not exist. Creating: {}",
+            package_dir.display()
+        );
+        std::fs::create_dir_all(&package_dir).map_err(|e| {
+            format!(
+                "Failed to create package directory '{}': {}",
+                package_dir.display(),
+                e
+            )
+        })?;
     } else if !package_dir.is_dir() {
-        return Err(format!("Error: Expected '{}' to be a directory, but it's not.", package_dir.display()));
+        return Err(format!(
+            "Error: Expected '{}' to be a directory, but it's not.",
+            package_dir.display()
+        ));
     }
 
-    let project_metadata = metadata::metadata()
-        .map_err(|e| format!("Error: Failed to read project metadata (in package_data): {:?}", e))?;
-    
+    let project_metadata = metadata::metadata().map_err(|e| {
+        format!(
+            "Error: Failed to read project metadata (in package_data): {:?}",
+            e
+        )
+    })?;
+
     let mut files_to_compress: Vec<std::path::PathBuf> = Vec::new();
-    
+
     if package_dir.is_dir() {
-        for entry_result in std::fs::read_dir(&package_dir)
-            .map_err(|e| format!("Failed to read package directory '{}': {}", package_dir.display(), e))?
-        {
-            let entry = entry_result.map_err(|e| format!("Failed to read directory entry in '{}': {}", package_dir.display(), e))?;
+        for entry_result in std::fs::read_dir(&package_dir).map_err(|e| {
+            format!(
+                "Failed to read package directory '{}': {}",
+                package_dir.display(),
+                e
+            )
+        })? {
+            let entry = entry_result.map_err(|e| {
+                format!(
+                    "Failed to read directory entry in '{}': {}",
+                    package_dir.display(),
+                    e
+                )
+            })?;
             let path = entry.path();
             if path.is_file() {
                 files_to_compress.push(path);
             } else if path.is_dir() {
-                dprintln!("Skipping subdirectory during flat file collection: {}", path.display());
+                dprintln!(
+                    "Skipping subdirectory during flat file collection: {}",
+                    path.display()
+                );
             }
         }
     }
     dprintln!("Files to compress: {:?}", files_to_compress);
     if files_to_compress.is_empty() {
-        dprintln!("Warning: No files found in package directory '{}' to compress.", package_dir.display());
+        dprintln!(
+            "Warning: No files found in package directory '{}' to compress.",
+            package_dir.display()
+        );
     }
 
     let package_file_name = format!(
@@ -177,22 +210,30 @@ fn package_data() -> Result<(), String> {
     );
     dprintln!("Output package file name: {}", package_file_name);
 
-    let ipkg_file_path = target_dir.join(&package_file_name); 
+    let ipkg_file_path = target_dir.join(&package_file_name);
     dprintln!("Full path for .ipkg file: {}", ipkg_file_path.display());
 
-    let ipkg_file = std::fs::File::create(&ipkg_file_path)
-        .map_err(|e| format!("Failed to create ipkg file '{}': {}", ipkg_file_path.display(), e))?;
-    
+    let ipkg_file = std::fs::File::create(&ipkg_file_path).map_err(|e| {
+        format!(
+            "Failed to create ipkg file '{}': {}",
+            ipkg_file_path.display(),
+            e
+        )
+    })?;
+
     let mut zip = zip::ZipWriter::new(ipkg_file);
     dprintln!("ZipWriter created for file: {}", ipkg_file_path.display());
     let options: FileOptions<'_, ()> =
         FileOptions::default().compression_method(CompressionMethod::Deflated);
-    
+
     for file_path in &files_to_compress {
-        let relative_path = file_path
-            .strip_prefix(&package_dir)
-            .map_err(|e| format!("Failed to strip prefix from file path: '{:?}' (base: '{:?}' Error: {})", file_path, package_dir, e))?;
-        
+        let relative_path = file_path.strip_prefix(&package_dir).map_err(|e| {
+            format!(
+                "Failed to strip prefix from file path: '{:?}' (base: '{:?}' Error: {})",
+                file_path, package_dir, e
+            )
+        })?;
+
         let path_in_zip = match relative_path.to_str() {
             Some(s) => s,
             None => {
@@ -201,85 +242,42 @@ fn package_data() -> Result<(), String> {
             }
         };
 
-        dprintln!("Adding to zip: '{}' from '{}'", path_in_zip, file_path.display());
+        dprintln!(
+            "Adding to zip: '{}' from '{}'",
+            path_in_zip,
+            file_path.display()
+        );
         zip.start_file(path_in_zip, options)
             .map_err(|e| format!("Failed to start file '{}' in zip: {}", path_in_zip, e))?;
-        
-        let mut f = std::fs::File::open(&file_path)
-            .map_err(|e| format!("Failed to open file for zipping '{}': {}", file_path.display(), e))?;
-        
-        std::io::copy(&mut f, &mut zip)
-            .map_err(|e| format!("Failed to copy file content to zip for '{}': {}", file_path.display(), e))?;
+
+        let mut f = std::fs::File::open(&file_path).map_err(|e| {
+            format!(
+                "Failed to open file for zipping '{}': {}",
+                file_path.display(),
+                e
+            )
+        })?;
+
+        std::io::copy(&mut f, &mut zip).map_err(|e| {
+            format!(
+                "Failed to copy file content to zip for '{}': {}",
+                file_path.display(),
+                e
+            )
+        })?;
     }
 
-    zip.finish()
-        .map_err(|e| format!("Failed to finish writing zip file '{}': {}", ipkg_file_path.display(), e))?;
+    zip.finish().map_err(|e| {
+        format!(
+            "Failed to finish writing zip file '{}': {}",
+            ipkg_file_path.display(),
+            e
+        )
+    })?;
 
-    dprintln!("Package created successfully at: {}", ipkg_file_path.display());
+    dprintln!(
+        "Package created successfully at: {}",
+        ipkg_file_path.display()
+    );
     Ok(())
 }
-
-// Placeholder for dprintln! if not available globally.
-// Ensure this is defined ONCE in your crate, typically in a utility module and exported.
-/*
-#[cfg(not(feature = "external_dprintln"))] // Example guard
-#[macro_export]
-macro_rules! dprintln {
-    ($($arg:tt)*) => {
-        if cfg!(debug_assertions) {
-            eprintln!($($arg)*);
-        }
-    };
-}
-*/
-
-// Ensure your actual ExecShell and metadata definitions are in `super`
-// and match the usage here.
-/*
-pub mod metadata {
-    use std::path::{Path, PathBuf};
-    #[derive(Debug)]
-    pub struct PackageMetadata {
-        pub name: String,
-        pub version: String, 
-    }
-    #[derive(Debug)]
-    pub struct AboutMetadata {
-        pub package: PackageMetadata,
-    }
-    #[derive(Debug)]
-    pub struct ProjectMetadata {
-        pub about: AboutMetadata,
-    }
-    pub fn get_dir() -> Result<PathBuf, String> { Ok(PathBuf::from(".")) }
-    pub fn metadata() -> Result<ProjectMetadata, String> {
-        Ok(ProjectMetadata {
-            about: AboutMetadata {
-                package: PackageMetadata {
-                    name: "example-project".to_string(),
-                    version: "0.1.0".to_string(),
-                }
-            }
-        })
-    }
-}
-
-#[derive(Default, Debug)]
-pub struct ExecShell;
-
-impl std::fmt::Display for ExecShell {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "default_shell")
-    }
-}
-
-impl ExecShell {
-    pub fn generate(&self) -> std::process::Command {
-        if cfg!(target_os = "windows") {
-            std::process::Command::new("cmd")
-        } else {
-            std::process::Command::new("sh")
-        }
-    }
-}
-*/
