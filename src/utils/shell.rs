@@ -67,8 +67,7 @@ pub fn is_superuser() -> bool {
     id.contains("uid=0(root)")
 }
 pub fn pager(target_string: String) {
-    let pager_command_str = std::env::var("PAGER")
-        .unwrap_or_else(|_| "less".to_string()); // Default to "less"
+    let pager_command_str = std::env::var("PAGER").unwrap_or_else(|_| "less".to_string()); // Default to "less"
 
     let pager_name = {
         let path = std::path::Path::new(&pager_command_str);
@@ -113,25 +112,29 @@ pub fn pager(target_string: String) {
     }
 
     // Try to spawn the pager with the chosen arguments
-    let mut child_result = command
-        .stdin(Stdio::piped())
-        .spawn();
+    let mut child_result = command.stdin(Stdio::piped()).spawn();
 
     // If initial spawn fails (e.g., specific args not supported), try again without args
     if let Err(ref e) = child_result {
-        eprintln!("Warning: Pager '{}' failed to start with specific arguments ({}). Retrying without arguments.", pager_command_str, e);
+        eprintln!(
+            "Warning: Pager '{}' failed to start with specific arguments ({}). Retrying without arguments.",
+            pager_command_str, e
+        );
         command = Command::new(&pager_command_str); // Recreate command without specific args
-        child_result = command
-            .stdin(Stdio::piped())
-            .spawn();
+        child_result = command.stdin(Stdio::piped()).spawn();
     }
 
     let mut child = match child_result {
         Ok(child) => child,
         Err(e) => {
-            eprintln!("Error: Pager '{}' failed to start ({}). Printing directly to stdout.", pager_command_str, e);
+            eprintln!(
+                "Error: Pager '{}' failed to start ({}). Printing directly to stdout.",
+                pager_command_str, e
+            );
             // Fallback: print directly if pager cannot be started
-            io::stdout().write_all(target_string.as_bytes()).expect("Failed to write to stdout");
+            io::stdout()
+                .write_all(target_string.as_bytes())
+                .expect("Failed to write to stdout");
             return;
         }
     };
@@ -139,26 +142,42 @@ pub fn pager(target_string: String) {
     // Write the target_string to the pager's stdin
     if let Some(mut stdin) = child.stdin.take() {
         if let Err(e) = stdin.write_all(target_string.as_bytes()) {
-            eprintln!("Error: Failed to write to pager '{}' stdin ({}). Printing directly to stdout.", pager_command_str, e);
+            eprintln!(
+                "Error: Failed to write to pager '{}' stdin ({}). Printing directly to stdout.",
+                pager_command_str, e
+            );
             // Fallback: print directly if writing to stdin fails
-            io::stdout().write_all(target_string.as_bytes()).expect("Failed to write to stdout");
+            io::stdout()
+                .write_all(target_string.as_bytes())
+                .expect("Failed to write to stdout");
             return;
         }
     } else {
-        eprintln!("Error: Failed to open pager '{}' stdin. Printing directly to stdout.", pager_command_str);
+        eprintln!(
+            "Error: Failed to open pager '{}' stdin. Printing directly to stdout.",
+            pager_command_str
+        );
         // Fallback: print directly if stdin is not available
-        io::stdout().write_all(target_string.as_bytes()).expect("Failed to write to stdout");
+        io::stdout()
+            .write_all(target_string.as_bytes())
+            .expect("Failed to write to stdout");
         return;
     }
 
     // Wait for the pager process to finish
-    let output = child.wait_with_output().expect("failed to wait for pager process");
+    let output = child
+        .wait_with_output()
+        .expect("failed to wait for pager process");
 
     if !output.status.success() {
         // Pager exited with a non-zero status. This can happen if the user quits early.
         // Only print stderr if there's actual error output from the pager.
         if !output.stderr.is_empty() {
-            eprintln!("Pager '{}' exited with error: {}", pager_command_str, String::from_utf8_lossy(&output.stderr));
+            eprintln!(
+                "Pager '{}' exited with error: {}",
+                pager_command_str,
+                String::from_utf8_lossy(&output.stderr)
+            );
         }
     }
 }
