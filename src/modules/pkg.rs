@@ -8,11 +8,32 @@ pub mod depend;
 mod install;
 pub mod list;
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+pub enum Mode {
+    Local,
+    Global,
+    #[default]
+    Any,
+}
+
+impl Display for Mode {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Mode::Local => write!(f, "local"),
+            Mode::Global => write!(f, "global"),
+            Mode::Any => write!(f, "any (local & global)"),
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(default)]
 #[derive(Default)]
 pub struct PackageData {
     pub about: AboutData,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub architecture: Vec<String>,
+    pub mode: Mode,
     #[serde(skip_serializing_if = "RelationData::is_empty")]
     pub relation: RelationData,
 }
@@ -90,6 +111,18 @@ impl Display for PackageData {
             self.about.author.email
         )?;
 
+        if !&self.architecture.is_empty() {
+            writeln!(
+                f,
+                "{} {}",
+                "Architectures:".bold(),
+                &self.architecture.join(", ").italic()
+            )?;
+        } else {
+            writeln!(f, "{} {}", "Architectures:".bold(), "any".italic())?;
+        }
+        writeln!(f, "{} {}", "Available Installation Mode:".bold(), self.mode)?;
+
         if !self.relation.depend.is_empty() {
             writeln!(f, "\n{}", "Dependencies:".bold())?;
             for group in &self.relation.depend {
@@ -97,7 +130,6 @@ impl Display for PackageData {
                     let dep = &group[0];
                     writeln!(f, "  - {} ({})", dep.name.green(), dep.range)?;
                 } else {
-                    // alts_str の生成を維持し、可読性を優先
                     let alts: Vec<String> = group
                         .iter()
                         .map(|d| format!("{} ({})", d.name, d.range))
@@ -206,7 +238,6 @@ impl Display for RelationData {
             writeln!(f, "{}", "Dependencies:".bold())?;
             for group in &self.depend {
                 if group.len() == 1 {
-                    // `to_string()` の呼び出しを減らし、`Display` 実装を利用
                     writeln!(f, "  - {}", &group[0])?;
                 } else {
                     let alts: Vec<String> = group.iter().map(|d| d.to_string()).collect();
@@ -227,7 +258,7 @@ impl Display for RelationData {
             writeln!(f, "\n{}", "Suggests:".bold())?;
             for group in &self.suggests {
                 if group.len() == 1 {
-                    writeln!(f, "  - {}", group[0].to_string().yellow())?; // `to_string()` は `colored` のために必要
+                    writeln!(f, "  - {}", group[0].to_string().yellow())?;
                 } else {
                     let alts: Vec<String> = group.iter().map(|d| d.to_string()).collect();
                     let alts_str = alts.join(" | ");
@@ -240,7 +271,7 @@ impl Display for RelationData {
             writeln!(f, "\n{}", "Recommends:".bold())?;
             for group in &self.recommends {
                 if group.len() == 1 {
-                    writeln!(f, "  - {}", group[0].to_string().blue())?; // `to_string()` は `colored` のために必要
+                    writeln!(f, "  - {}", group[0].to_string().blue())?;
                 } else {
                     let alts: Vec<String> = group.iter().map(|d| d.to_string()).collect();
                     let alts_str = alts.join(" | ");
@@ -252,14 +283,14 @@ impl Display for RelationData {
         if !self.conflicts.is_empty() {
             writeln!(f, "\n{}", "Conflicts:".bold())?;
             for conflict in &self.conflicts {
-                writeln!(f, "  - {}", conflict.to_string().red())?; // `to_string()` は `colored` のために必要
+                writeln!(f, "  - {}", conflict.to_string().red())?;
             }
         }
 
         if !self.virtuals.is_empty() {
             writeln!(f, "\n{}", "Virtual Packages:".bold())?;
             for virtual_pkg in &self.virtuals {
-                writeln!(f, "  - {}", virtual_pkg.to_string().purple())?; // `to_string()` は `colored` のために必要
+                writeln!(f, "  - {}", virtual_pkg.to_string().purple())?;
             }
         }
 
@@ -324,8 +355,6 @@ impl Default for PackageVersion {
 }
 
 impl RelationData {
-    /// RelationData が空かどうかを判定します。
-    /// Serde の `skip_serializing_if` に使用されます。
     fn is_empty(&self) -> bool {
         self.depend.is_empty()
             && self.depend_cmds.is_empty()
@@ -343,13 +372,7 @@ mod tests {
     use std::str::FromStr;
 
     #[test]
-    fn test_display_default() {
-        let data = PackageData::default();
-        println!("{}", data);
-    }
-
-    #[test]
-    fn test_display_with_relations() {
+    fn test_display_with_relations_and_new_fields() {
         let mut data = PackageData::default();
         data.about.author = AuthorAboutData {
             name: "Test Author".to_string(),
@@ -359,6 +382,9 @@ mod tests {
             name: "my-package".to_string(),
             version: Version::default(),
         };
+
+        data.architecture = vec!["x86_64".to_string(), "aarch64".to_string()];
+        data.mode = Mode::Global;
 
         data.relation.depend.push(vec![PackageRange {
             name: "dep-a".to_string(),
@@ -408,7 +434,13 @@ mod tests {
         data.relation.depend_cmds.push("git".to_string());
         data.relation.depend_cmds.push("make".to_string());
 
+        println!("\n--- Test Display With Relations and New Fields ---");
         println!("{}", data);
+        assert_eq!(
+            data.architecture,
+            vec!["x86_64".to_string(), "aarch64".to_string()]
+        );
+        assert_eq!(data.mode, Mode::Global);
     }
 
     #[test]
@@ -417,6 +449,7 @@ mod tests {
             name: "Test Author".to_string(),
             email: "test@example.com".to_string(),
         };
+        println!("\n--- Test Display Author ---");
         println!("{}", author);
     }
 
@@ -426,6 +459,7 @@ mod tests {
             name: "test-package".to_string(),
             version: Version::default(),
         };
+        println!("\n--- Test Display Package ---");
         println!("{}", package);
     }
 
@@ -444,6 +478,7 @@ mod tests {
             name: "conflicting-pkg".to_string(),
             range: VersionRange::from_str("< 1.0").unwrap(),
         });
+        println!("\n--- Test Display Relation ---");
         println!("{}", relation);
     }
 
@@ -453,6 +488,7 @@ mod tests {
             name: "test-dep".to_string(),
             range: VersionRange::from_str(">= 1.0").unwrap(),
         };
+        println!("\n--- Test Display Package Range ---");
         println!("{}", range);
     }
 
@@ -462,6 +498,15 @@ mod tests {
             name: "test-version".to_string(),
             version: Version::default(),
         };
+        println!("\n--- Test Display Package Version ---");
         println!("{}", version);
+    }
+
+    #[test]
+    fn test_mode_display() {
+        println!("\n--- Test Mode Display ---");
+        println!("Local: {}", Mode::Local);
+        println!("Global: {}", Mode::Global);
+        println!("Any: {}", Mode::Any);
     }
 }

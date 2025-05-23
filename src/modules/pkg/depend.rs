@@ -1,85 +1,87 @@
 use super::list::PackageListData;
+use super::super::version::Version;
 use super::{PackageData, PackageRange, RelationData};
 use crate::utils::shell;
+use std::collections::HashMap;
+
+/// インストール済みのパッケージから、実パッケージと利用可能なパッケージ（実パッケージと仮想パッケージ）のマップを構築します。
+fn build_package_maps(installed_packages: &PackageListData) -> (HashMap<String, Vec<Version>>, HashMap<String, Vec<Version>>) {
+    let mut real_packages = HashMap::new();
+    let mut available_packages = HashMap::new();
+    for p in &installed_packages.installed_packages {
+        let name = p.info.about.package.name.clone();
+        let version = p.info.about.package.version.clone();
+        real_packages
+            .entry(name.clone())
+            .or_insert_with(Vec::new)
+            .push(version.clone());
+        available_packages
+            .entry(name)
+            .or_insert_with(Vec::new)
+            .push(version);
+        for v in &p.info.relation.virtuals {
+            let v_name = v.name.clone();
+            let v_version = v.version.clone();
+            available_packages
+                .entry(v_name)
+                .or_insert_with(Vec::new)
+                .push(v_version);
+        }
+    }
+    (real_packages, available_packages)
+}
 
 /// 単一の依存関係がインストール済みのパッケージまたは仮想パッケージで満たされているかをチェックします。
-///
-/// # 引数
-/// * `dep` - チェックする依存関係（パッケージ名とバージョン範囲）。
-/// * `installed_packages` - インストール済みのパッケージリスト。
-///
-/// # 戻り値
-/// 依存関係が満たされている場合は`true`、そうでない場合は`false`。
-fn is_dependency_satisfied(dep: &PackageRange, installed_packages: &PackageListData) -> bool {
-    // 具体的なパッケージのチェック
-    if installed_packages.installed_packages.iter().any(|p| {
-        p.info.about.package.name == dep.name && dep.range.compare(&p.info.about.package.version)
-    }) {
-        return true;
+pub fn is_dependency_satisfied(dep: &PackageRange, installed_packages: &PackageListData) -> bool {
+    let (_, available_packages) = build_package_maps(installed_packages);
+    if let Some(versions) = available_packages.get(&dep.name) {
+        versions.iter().any(|v| dep.range.compare(v))
+    } else {
+        false
     }
-    // 仮想パッケージのチェック
-    installed_packages.installed_packages.iter().any(|p| {
-        p.info
-            .relation
-            .virtuals
-            .iter()
-            .any(|v| v.name == dep.name && dep.range.compare(&v.version))
-    })
 }
 
 /// パッケージのすべての依存関係が満たされているかをチェックします。
-///
-/// 各依存関係グループ内で、少なくとも1つの依存関係が満たされていれば、そのグループは満たされたと見なされます。
-///
-/// # 引数
-/// * `package` - 依存関係をチェックするパッケージ。
-/// * `installed_packages` - インストール済みのパッケージリスト。
-///
-/// # 戻り値
-/// すべての依存関係グループが満たされている場合は`true`、そうでない場合は`false`。
 pub fn are_dependencies_satisfied(
     package: &PackageData,
     installed_packages: &PackageListData,
 ) -> bool {
+    let (_, available_packages) = build_package_maps(installed_packages);
     package.relation.depend.iter().all(|group| {
-        group
-            .iter()
-            .any(|dep| is_dependency_satisfied(dep, installed_packages))
+        group.iter().any(|dep| {
+            if let Some(versions) = available_packages.get(&dep.name) {
+                versions.iter().any(|v| dep.range.compare(v))
+            } else {
+                false
+            }
+        })
     })
 }
 
 /// 満たされていない依存関係グループを返します。
-///
-/// # 引数
-/// * `package` - 依存関係をチェックするパッケージ。
-/// * `installed_packages` - インストール済みのパッケージリスト。
-///
-/// # 戻り値
-/// 満たされていない依存関係グループのベクター。
 pub fn get_missing_dependencies(
     package: &PackageData,
     installed_packages: &PackageListData,
 ) -> Vec<Vec<PackageRange>> {
+    let (_, available_packages) = build_package_maps(installed_packages);
     package
         .relation
         .depend
         .iter()
         .filter(|group| {
-            !group
-                .iter()
-                .any(|dep| is_dependency_satisfied(dep, installed_packages))
+            !group.iter().any(|dep| {
+                if let Some(versions) = available_packages.get(&dep.name) {
+                    versions.iter().any(|v| dep.range.compare(v))
+                } else {
+                    false
+                }
+            })
         })
         .cloned()
         .collect()
 }
 
 /// パッケージが必要とするすべてのシステムコマンドが利用可能かをチェックします。
-///
-/// # 引数
-/// * `relation` - チェックするパッケージの関係データ。
-///
-/// # 戻り値
-/// すべての必須コマンドが利用可能な場合は`true`、そうでない場合は`false`。
 pub fn are_depend_cmds_available(relation: &RelationData) -> bool {
     relation
         .depend_cmds
@@ -88,12 +90,6 @@ pub fn are_depend_cmds_available(relation: &RelationData) -> bool {
 }
 
 /// 利用できない必須コマンドのリストを返します。
-///
-/// # 引数
-/// * `relation` - チェックするパッケージの関係データ。
-///
-/// # 戻り値
-/// 利用できないコマンドのベクター。
 pub fn get_missing_depend_cmds(relation: &RelationData) -> Vec<String> {
     relation
         .depend_cmds
@@ -104,29 +100,24 @@ pub fn get_missing_depend_cmds(relation: &RelationData) -> Vec<String> {
 }
 
 /// パッケージがインストール済みのパッケージと競合するかをチェックします。
-///
-/// # 引数
-/// * `package` - 競合をチェックするパッケージ。
-/// * `installed_packages` - インストール済みのパッケージリスト。
-///
-/// # 戻り値
-/// 競合が存在する場合は`true`、そうでない場合は`false`。
 pub fn has_conflicts(package: &PackageData, installed_packages: &PackageListData) -> bool {
+    let (real_packages, _) = build_package_maps(installed_packages);
     package.relation.conflicts.iter().any(|conflict| {
-        installed_packages.installed_packages.iter().any(|p| {
-            p.info.about.package.name == conflict.name
-                && conflict.range.compare(&p.info.about.package.version)
-        })
+        if let Some(versions) = real_packages.get(&conflict.name) {
+            versions.iter().any(|v| conflict.range.compare(v))
+        } else {
+            false
+        }
     })
 }
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use super::super::list::{InstalledPackageData, PackageListData};
     use super::super::{
         AboutData, PackageAboutData, PackageData, PackageRange, PackageVersion, RelationData,
     };
-    use super::*;
     use crate::modules::version::{Version, VersionRange};
     use std::str::FromStr;
 
