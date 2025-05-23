@@ -33,11 +33,11 @@ fn main() -> Result<(), std::io::Error> {
     // OptionTypeに関わらず、opt_strで直接マッチング
     let sub_command: SubCommand = match opt_str {
         "--help" | "-h" | "help" => SubCommand::Help,
-        "--manual" | "-m" | "manual" => SubCommand::Manual,
+        "--manual" | "-m" | "manual" | "man" => SubCommand::Manual,
         "--version" | "-v" | "version" => SubCommand::Version,
-        "project" => SubCommand::Project,
-        "system" => SubCommand::System,
-        "pkg" | "package" => SubCommand::Package,
+        "project" | "proj" | "--projec" => SubCommand::Project,
+        "system" | "sys" | "--system" => SubCommand::System,
+        "pkg" | "package" | "--package" => SubCommand::Package,
         _ => SubCommand::Unknown,
     };
 
