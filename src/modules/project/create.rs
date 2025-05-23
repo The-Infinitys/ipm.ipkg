@@ -38,18 +38,23 @@ pub struct ProjectParams {
 impl Display for ProjectParams {
     /// `ProjectParams` の内容を整形して表示します。
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        let template_str = match self.project_template {
-            ProjectTemplateType::Default => "default",
-            ProjectTemplateType::Rust => "rust",
-        };
         write!(
             f,
             "Project: {}\nTemplate: {}\nAuthor: {} <{}>", // Author 情報も表示に追加
-            self.project_name, template_str, self.author.name, self.author.email
+            self.project_name, self.project_template, self.author.name, self.author.email
         )
     }
 }
-
+impl Display for ProjectTemplateType {
+    /// `ProjectTemplateType` の内容を整形して表示します。
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        let template_str = match self {
+            ProjectTemplateType::Default => "default",
+            ProjectTemplateType::Rust => "rust",
+        };
+        write!(f, "{}", template_str)
+    }
+}
 /// プロジェクト作成中に発生する可能性のあるエラーを定義します。
 #[derive(Debug, Error)]
 pub enum ProjectCreationError {

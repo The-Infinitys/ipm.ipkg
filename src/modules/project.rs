@@ -271,7 +271,7 @@ fn project_create(args: Vec<&Option>) -> Result<(), std::io::Error> {
             email: String::new(),
         },
     };
-
+    let mut _is_template_selected = false;
     for arg in args {
         match arg.opt_str.as_str() {
             "--project-name" | "--name" | "--package-name" => {
@@ -303,6 +303,7 @@ fn project_create(args: Vec<&Option>) -> Result<(), std::io::Error> {
                             format!("Error parsing project template: {}", e),
                         )
                     })?;
+                _is_template_selected = true;
             }
             "--author-name" => {
                 params.author.name = arg
@@ -338,12 +339,18 @@ fn project_create(args: Vec<&Option>) -> Result<(), std::io::Error> {
     }
 
     if params.project_name.is_empty() {
-        params.project_name = question::kebab_loop("Project name: ");
+        params.project_name = question::kebab_loop("Project name");
     }
-    // `ProjectTemplateType::Default` は既にデフォルト値なので、この行は冗長
-    // if params.project_template == ProjectTemplateType::Default {
-    //     params.project_template = ProjectTemplateType::Default;
-    // }
+    if !_is_template_selected {
+        params.project_template = ProjectTemplateType::from_str(&shell::question::select(
+            "Project template",
+            &[
+                &format!("{}", ProjectTemplateType::Default),
+                &format!("{}", ProjectTemplateType::Rust),
+            ],
+        ))
+        .unwrap_or_default();
+    }
     if params.author.name.is_empty() {
         params.author.name = shell::username();
     }

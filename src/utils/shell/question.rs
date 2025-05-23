@@ -1,4 +1,5 @@
 use colored::Colorize;
+use dialoguer;
 use regex::Regex;
 use std::io::{Write, stdin, stdout};
 
@@ -12,7 +13,7 @@ use std::io::{Write, stdin, stdout};
 ///
 /// * `String` - 標準入力から読み取った入力行。
 fn str_input(msg: &str) -> String {
-    print!("{}", msg);
+    print!("{}: ", msg.green());
     let mut input: String = String::new();
     stdout().flush().unwrap();
     stdin()
@@ -296,6 +297,16 @@ pub fn email_loop(msg: &str) -> String {
             }
         };
     }
+}
+
+pub fn select(msg: &str, options: &[&str]) -> String {
+    let selection = dialoguer::Select::new()
+        .with_prompt(format!("{}", msg.green()))
+        .default(0)
+        .items(options)
+        .interact()
+        .unwrap();
+    options[selection].to_string()
 }
 
 #[cfg(test)]
