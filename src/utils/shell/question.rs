@@ -1,7 +1,6 @@
 use colored::Colorize;
 use dialoguer;
 use regex::Regex;
-use std::io::{Write, stdin, stdout};
 
 /// ユーザーにメッセージを表示し、標準入力から1行の入力を取得します。
 ///
@@ -13,13 +12,12 @@ use std::io::{Write, stdin, stdout};
 ///
 /// * `String` - 標準入力から読み取った入力行。
 fn str_input(msg: &str) -> String {
-    print!("{}: ", msg.green());
-    let mut input: String = String::new();
-    stdout().flush().unwrap();
-    stdin()
-        .read_line(&mut input)
-        .expect("正しい文字列が入力されませんでした");
-    input
+    dialoguer::Input::with_theme(&dialoguer::theme::ColorfulTheme::default())
+        .with_prompt(msg)
+        .interact_text()
+        .unwrap_or_else(|_| {
+            panic!("正しい文字列が入力されませんでした");
+        })
 }
 
 /// はい/いいえの質問を行い、ユーザーの回答を検証します。
@@ -300,7 +298,7 @@ pub fn email_loop(msg: &str) -> String {
 }
 
 pub fn select(msg: &str, options: &[&str]) -> String {
-    let selection = dialoguer::Select::new()
+    let selection = dialoguer::Select::with_theme(&dialoguer::theme::ColorfulTheme::default())
         .with_prompt(format!("{}", msg.green()))
         .default(0)
         .items(options)
