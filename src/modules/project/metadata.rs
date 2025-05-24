@@ -2,15 +2,15 @@ use crate::dprintln;
 use crate::{modules::pkg::PackageData, utils::files::is_file_exists};
 use std::{env, io, path::PathBuf}; // io::Error をインポート
 
-/// 現在のディレクトリまたは親ディレクトリから `package.yaml` を含むプロジェクトのルートディレクトリを探します。
+/// 現在のディレクトリまたは親ディレクトリから `project.yaml` を含むプロジェクトのルートディレクトリを探します。
 ///
 /// # 戻り値
-/// `package.yaml` が見つかった場合はそのディレクトリの `PathBuf` を `Ok` で返します。
+/// `project.yaml` が見つかった場合はそのディレクトリの `PathBuf` を `Ok` で返します。
 /// 見つからなかった場合は `io::Error` を `Err` で返します。
 pub fn get_dir() -> Result<PathBuf, io::Error> {
     let mut current_path = env::current_dir()?; // Result を直接扱う
     loop {
-        let metadata_path = current_path.join("package.yaml");
+        let metadata_path = current_path.join("project.yaml");
         dprintln!("{}", metadata_path.display()); // .to_str().unwrap() を避ける
         if is_file_exists(metadata_path.to_str().ok_or_else(|| {
             // .to_str() の失敗を考慮
@@ -18,30 +18,30 @@ pub fn get_dir() -> Result<PathBuf, io::Error> {
         })?) {
             return Ok(current_path);
         } else {
-            dprintln!("Not found package.yaml in {}", current_path.display());
+            dprintln!("Not found project.yaml in {}", current_path.display());
             if let Some(parent) = current_path.parent() {
                 current_path = parent.to_owned(); // 親ディレクトリに移動
             } else {
-                // ルートディレクトリに到達し、package.yaml が見つからなかった場合
+                // ルートディレクトリに到達し、project.yaml が見つからなかった場合
                 return Err(io::Error::new(
                     io::ErrorKind::NotFound,
-                    "package.yaml not found in current or parent directories",
+                    "project.yaml not found in current or parent directories",
                 ));
             }
         }
     }
 }
 
-/// プロジェクトの `package.yaml` ファイルへのパスを取得します。
+/// プロジェクトの `project.yaml` ファイルへのパスを取得します。
 ///
 /// # 戻り値
-/// `package.yaml` への `PathBuf` を `Ok` で返します。
+/// `project.yaml` への `PathBuf` を `Ok` で返します。
 /// ファイルが見つからない場合は `io::Error` を `Err` で返します。
 pub fn get_path() -> Result<PathBuf, io::Error> {
-    get_dir().map(|dir| dir.join("package.yaml"))
+    get_dir().map(|dir| dir.join("project.yaml"))
 }
 
-/// `package.yaml` ファイルを読み込み、`PackageData` 構造体にパースします。
+/// `project.yaml` ファイルを読み込み、`PackageData` 構造体にパースします。
 ///
 /// # 戻り値
 /// パースされた `PackageData` を `Ok` で返します。

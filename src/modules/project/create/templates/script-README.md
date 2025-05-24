@@ -8,7 +8,7 @@
 ### 実行
 
 すべてのシェルスクリプトは、プロジェクトのルートディレクトリで行われます。
-つまり、package.yamlが存在するフォルダがカレントディレクトリになるということです。
+つまり、project.yamlが存在するフォルダがカレントディレクトリになるということです。
  /
 | - ipkg/
 |      | - scripts/
@@ -21,7 +21,7 @@
 |      |         |         | - purge.sh
 |      |         |         | - remove.sh
 |      |         |         | - install.sh
-| - package.yaml
+| - project.yaml
 | - src/
       | ...
 

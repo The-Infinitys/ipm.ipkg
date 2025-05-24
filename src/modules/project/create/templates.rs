@@ -71,18 +71,6 @@ pub fn default() -> Result<(), io::Error> {
             content: include_str!("templates/default/ipkg/scripts/package.sh").to_string(),
         },
         SetUpItem {
-            path: "ipkg/scripts/package/install.sh".to_string(),
-            content: include_str!("templates/default/ipkg/scripts/package/install.sh").to_string(),
-        },
-        SetUpItem {
-            path: "ipkg/scripts/package/remove.sh".to_string(),
-            content: include_str!("templates/default/ipkg/scripts/package/remove.sh").to_string(),
-        },
-        SetUpItem {
-            path: "ipkg/scripts/package/purge.sh".to_string(),
-            content: include_str!("templates/default/ipkg/scripts/package/purge.sh").to_string(),
-        },
-        SetUpItem {
             path: "ipkg/scripts/README.md".to_string(),
             content: include_str!("templates/script-README.md").to_string(),
         },
@@ -146,22 +134,6 @@ pub fn rust() -> Result<(), io::Error> {
         SetUpItem {
             path: "ipkg/scripts/purge.sh".to_string(),
             content: include_str!("templates/rust/ipkg/scripts/purge.sh").to_string(),
-        },
-        SetUpItem {
-            path: "ipkg/scripts/package.sh".to_string(),
-            content: include_str!("templates/rust/ipkg/scripts/package.sh").to_string(),
-        },
-        SetUpItem {
-            path: "ipkg/scripts/package/install.sh".to_string(),
-            content: include_str!("templates/rust/ipkg/scripts/package/install.sh").to_string(),
-        },
-        SetUpItem {
-            path: "ipkg/scripts/package/remove.sh".to_string(),
-            content: include_str!("templates/rust/ipkg/scripts/package/remove.sh").to_string(),
-        },
-        SetUpItem {
-            path: "ipkg/scripts/package/purge.sh".to_string(),
-            content: include_str!("templates/rust/ipkg/scripts/package/purge.sh").to_string(),
         },
         SetUpItem {
             path: "ipkg/scripts/README.md".to_string(),
@@ -240,18 +212,6 @@ pub fn python() -> Result<(), io::Error> {
         SetUpItem {
             path: "ipkg/scripts/package.sh".to_string(),
             content: include_str!("templates/python/ipkg/scripts/package.sh").to_string(),
-        },
-        SetUpItem {
-            path: "ipkg/scripts/package/install.sh".to_string(),
-            content: include_str!("templates/python/ipkg/scripts/package/install.sh").to_string(),
-        },
-        SetUpItem {
-            path: "ipkg/scripts/package/remove.sh".to_string(),
-            content: include_str!("templates/python/ipkg/scripts/package/remove.sh").to_string(),
-        },
-        SetUpItem {
-            path: "ipkg/scripts/package/purge.sh".to_string(),
-            content: include_str!("templates/python/ipkg/scripts/package/purge.sh").to_string(),
         },
         SetUpItem {
             path: "ipkg/scripts/README.md".to_string(),

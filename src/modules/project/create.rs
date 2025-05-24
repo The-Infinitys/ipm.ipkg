@@ -88,8 +88,7 @@ pub fn create(params: &ProjectParams) -> Result<(), ProjectCreationError> {
     project_data.about.package.name = params.project_name.clone(); // to_string() は不要、clone() で十分
     project_data.about.author = params.author.clone();
 
-    // package.yaml の作成
-    let project_data_filename = "package.yaml";
+    let project_data_filename = "project.yaml";
     let data = serde_yaml::to_string(&project_data)?; // YamlError を自動変換
 
     // file_creation は Result<Result<(), io::Error>, ...> を返す可能性があるので注意
