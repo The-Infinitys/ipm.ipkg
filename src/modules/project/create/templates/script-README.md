@@ -16,11 +16,7 @@
 |      |         | - remove.sh
 |      |         | - build.sh
 |      |         | - purge.sh
-|      |         | - package.sh
-|      |         | - package/
-|      |         |         | - purge.sh
-|      |         |         | - remove.sh
-|      |         |         | - install.sh
+|      | - project-ignore.yaml
 | - project.yaml
 | - src/
       | ...
@@ -43,3 +39,25 @@
  - $IPKG_INSTALL_MODE | $IPKG_REMOVE_MODE | $IPKG_PURGE_MODE :
     Infinite Packageを管理(インストール・削除・パージ)する際のモードが代入されています。
         値: local / global
+
+### パッケージング
+
+`ipkg project package`
+を実行することによって、プロジェクトをパッケージにすることができます。
+
+```yaml
+source-build:
+  - log/
+normal:
+  - .gitignore
+  - .git
+min:
+  - src/
+  - target/debug/
+  - target/release/*/
+  - target/release/*.d
+  - target/release/*rlib
+  - Cargo*
+```
+
+project-ignore.yamlに無視するファイルやフォルダのデータを入れることができます。
