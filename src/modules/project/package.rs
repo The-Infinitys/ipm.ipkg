@@ -111,7 +111,7 @@ pub fn package(opts: PackageOptions) -> Result<(), String> {
     };
 
     // Select ignore list based on PackageTarget
-    let mut ignore_list: Vec<String> = match opts.target {
+    let ignore_list: Vec<String> = match opts.target {
         PackageTarget::SourceBuild => ignore_config.source_build,
         PackageTarget::Normal => {
             let mut list = ignore_config.source_build;
