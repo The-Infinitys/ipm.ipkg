@@ -131,7 +131,7 @@ pub fn rust() -> Result<(), io::Error> {
             path: "ipkg/scripts/purge.sh".to_string(),
             content: include_str!("templates/rust/ipkg/scripts/purge.sh").to_string(),
         },
-        SetUpItem{
+        SetUpItem {
             path: "ipkg/project-ignore.yaml".to_string(),
             content: include_str!("templates/rust/ipkg/project-ignore.yaml").to_string(),
         },
