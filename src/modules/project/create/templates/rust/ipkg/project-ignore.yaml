@@ -1,0 +1,8 @@
+source-build:
+  - log/
+normal:
+  - log/
+  - build/
+min:
+  - log/
+  - build/
