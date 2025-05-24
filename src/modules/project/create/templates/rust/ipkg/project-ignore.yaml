@@ -1,12 +1,17 @@
 source-build:
-  - log/
+  - "log/"
+  - "**/*.log"
+  - "tmp/"
+  - "**/*.tmp"
 normal:
-  - .gitignore
-  - .git
+  - ".git/"
+  - ".gitignore"
+  - ".gitattributes"
+  - "README.md"
 min:
-  - src/
-  - target/debug/
-  - target/release/*/
-  - target/release/*.d
-  - target/release/*rlib
-  - Cargo*
+  - "src/"
+  - "target/debug"
+  - "Cargo.toml"
+  - "Cargo.lock"
+  - "**/*.rlib"
+  - "**/*.d"
