@@ -111,7 +111,7 @@ pub fn package(opts: PackageOptions) -> Result<(), String> {
     };
 
     // Select ignore list based on PackageTarget
-    let ignore_list: Vec<String> = match opts.target {
+    let mut ignore_list: Vec<String> = match opts.target {
         PackageTarget::SourceBuild => ignore_config.source_build,
         PackageTarget::Normal => {
             let mut list = ignore_config.source_build;
@@ -125,6 +125,7 @@ pub fn package(opts: PackageOptions) -> Result<(), String> {
             list
         }
     };
+
     dprintln!("Ignore list for target {}: {:?}", opts.target, ignore_list);
 
     // Prepare package directory
@@ -160,8 +161,8 @@ fn copy_files(src: &Path, dst: &Path, ignore_list: &[String]) -> Result<(), Stri
     // Build Gitignore from ignore_list
     let mut builder = GitignoreBuilder::new(src);
     for pattern in ignore_list {
-        if let Err(e) = builder.add_line(None, pattern) {
-            dprintln!("Warning: Invalid ignore pattern '{}': {}", pattern, e);
+        if let Err(_e) = builder.add_line(None, pattern) {
+            dprintln!("Warning: Invalid ignore pattern '{}': {}", pattern, _e);
         }
     }
     let gitignore = builder
@@ -191,7 +192,13 @@ fn copy_files(src: &Path, dst: &Path, ignore_list: &[String]) -> Result<(), Stri
             std::fs::create_dir_all(&dst_path).map_err(|e| {
                 format!("Failed to create directory '{}': {}", dst_path.display(), e)
             })?;
-        } else if path.is_file() {
+        } else if path.is_file()
+            && relative_path
+                .to_str()
+                .unwrap()
+                .to_string()
+                .starts_with("package/")
+        {
             std::fs::copy(path, &dst_path).map_err(|e| {
                 format!(
                     "Failed to copy '{}' to '{}': {}",
