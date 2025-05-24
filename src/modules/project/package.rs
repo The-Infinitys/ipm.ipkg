@@ -4,13 +4,13 @@ use colored::Colorize;
 use ignore::gitignore::GitignoreBuilder;
 use serde_yaml;
 use std::fmt::{self, Display};
+use std::fs::File;
 use std::path::Path;
 use std::str::FromStr;
 use walkdir::WalkDir;
 use zip::CompressionMethod;
-use zip::write::FileOptions;
-use std::fs::File;
 use zip::ZipWriter;
+use zip::write::FileOptions;
 
 /// Defines the options for the packaging process.
 #[derive(Debug, Default)]
@@ -273,7 +273,8 @@ fn package_data(
 fn zip_process(from_path: &Path, to_path: &Path) -> Result<(), String> {
     dprintln!("Zipping {} to {}", from_path.display(), to_path.display());
 
-    let file = File::create(to_path).map_err(|e| format!("Failed to create zip file '{}': {}", to_path.display(), e))?;
+    let file = File::create(to_path)
+        .map_err(|e| format!("Failed to create zip file '{}': {}", to_path.display(), e))?;
     let mut zip = ZipWriter::new(file);
 
     let prefix = from_path.file_name().unwrap().to_string_lossy();
@@ -283,12 +284,17 @@ fn zip_process(from_path: &Path, to_path: &Path) -> Result<(), String> {
         if path.is_file() {
             let relative_path = path.strip_prefix(from_path).unwrap();
             let zip_path = format!("{}/{}", prefix, relative_path.to_string_lossy());
-            let options = FileOptions::<'_, ()>::default().compression_method(CompressionMethod::Deflated);
-            zip.start_file(&zip_path, options).map_err(|e| format!("Failed to start file '{}' in zip: {}", zip_path, e))?;
-            let mut f = File::open(path).map_err(|e| format!("Failed to open file '{}': {}", path.display(), e))?;
-            std::io::copy(&mut f, &mut zip).map_err(|e| format!("Failed to copy file '{}' to zip: {}", path.display(), e))?;
+            let options =
+                FileOptions::<'_, ()>::default().compression_method(CompressionMethod::Deflated);
+            zip.start_file(&zip_path, options)
+                .map_err(|e| format!("Failed to start file '{}' in zip: {}", zip_path, e))?;
+            let mut f = File::open(path)
+                .map_err(|e| format!("Failed to open file '{}': {}", path.display(), e))?;
+            std::io::copy(&mut f, &mut zip)
+                .map_err(|e| format!("Failed to copy file '{}' to zip: {}", path.display(), e))?;
         }
     }
-    zip.finish().map_err(|e| format!("Failed to finish zip: {}", e))?;
+    zip.finish()
+        .map_err(|e| format!("Failed to finish zip: {}", e))?;
     Ok(())
 }
