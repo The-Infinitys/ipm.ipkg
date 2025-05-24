@@ -267,6 +267,10 @@ fn package_data(
 
 /// Zips the contents of from_path to to_path.
 fn zip_process(from_path: &Path, to_path: &Path) -> Result<(), String> {
-    dprintln!("Compressing: from {}, to {}",from_path.display(),to_path.display());
+    dprintln!(
+        "Compressing: from {}, to {}",
+        from_path.display(),
+        to_path.display()
+    );
     Ok(())
 }
