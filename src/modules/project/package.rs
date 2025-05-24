@@ -9,6 +9,8 @@ use std::str::FromStr;
 use walkdir::WalkDir;
 use zip::CompressionMethod;
 use zip::write::FileOptions;
+use std::fs::File;
+use zip::ZipWriter;
 
 /// Defines the options for the packaging process.
 #[derive(Debug, Default)]
@@ -258,43 +260,35 @@ fn package_data(
         dprintln!("Moved: {} -> {}", path.display(), dest.display());
     }
 
-    // Create zip file
-    let package_file_name = format!("{}-version-{}.ipkg", project_name, project_version);
-    let ipkg_file_path = target_dir.join(&package_file_name);
-    dprintln!("Creating zip file: {}", ipkg_file_path.display());
+    // Create zip file path
+    let zip_file_path = target_dir.join(format!("{}-{}.zip", project_name, project_version));
 
-    let ipkg_file = std::fs::File::create(&ipkg_file_path)
-        .map_err(|e| format!("Failed to create '{}': {}", ipkg_file_path.display(), e))?;
-    let mut zip = zip::ZipWriter::new(ipkg_file);
-    let options: FileOptions<'_, ()> =
-        FileOptions::default().compression_method(CompressionMethod::Deflated);
+    // Call zip_process to create the zip file
+    zip_process(&inner_dir, &zip_file_path)?;
 
-    // Add files to zip
-    for entry in WalkDir::new(&inner_dir).into_iter().filter_map(|e| e.ok()) {
+    Ok(())
+}
+
+/// Zips the contents of from_path to to_path.
+fn zip_process(from_path: &Path, to_path: &Path) -> Result<(), String> {
+    dprintln!("Zipping {} to {}", from_path.display(), to_path.display());
+
+    let file = File::create(to_path).map_err(|e| format!("Failed to create zip file '{}': {}", to_path.display(), e))?;
+    let mut zip = ZipWriter::new(file);
+
+    let prefix = from_path.file_name().unwrap().to_string_lossy();
+
+    for entry in WalkDir::new(from_path).into_iter().filter_map(|e| e.ok()) {
         let path = entry.path();
-        if path.is_dir() {
-            continue;
+        if path.is_file() {
+            let relative_path = path.strip_prefix(from_path).unwrap();
+            let zip_path = format!("{}/{}", prefix, relative_path.to_string_lossy());
+            let options = FileOptions::<'_, ()>::default().compression_method(CompressionMethod::Deflated);
+            zip.start_file(&zip_path, options).map_err(|e| format!("Failed to start file '{}' in zip: {}", zip_path, e))?;
+            let mut f = File::open(path).map_err(|e| format!("Failed to open file '{}': {}", path.display(), e))?;
+            std::io::copy(&mut f, &mut zip).map_err(|e| format!("Failed to copy file '{}' to zip: {}", path.display(), e))?;
         }
-        let relative_path = path
-            .strip_prefix(package_dir)
-            .map_err(|e| format!("Failed to strip prefix from '{}': {}", path.display(), e))?;
-        let path_in_zip = relative_path.to_string_lossy().into_owned();
-        dprintln!("Adding to zip: '{}'", path_in_zip);
-
-        zip.start_file(&path_in_zip, options)
-            .map_err(|e| format!("Failed to start file '{}' in zip: {}", path_in_zip, e))?;
-        let mut file = std::fs::File::open(path)
-            .map_err(|e| format!("Failed to open '{}': {}", path.display(), e))?;
-        std::io::copy(&mut file, &mut zip)
-            .map_err(|e| format!("Failed to copy '{}' to zip: {}", path.display(), e))?;
     }
-
-    zip.finish()
-        .map_err(|e| format!("Failed to finish zip '{}': {}", ipkg_file_path.display(), e))?;
-
-    dprintln!(
-        "Package created successfully at: {}",
-        ipkg_file_path.display()
-    );
+    zip.finish().map_err(|e| format!("Failed to finish zip: {}", e))?;
     Ok(())
 }
