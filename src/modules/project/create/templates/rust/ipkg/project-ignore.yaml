@@ -1,8 +1,12 @@
 source-build:
   - log/
 normal:
-  - log/
-  - build/
+  - .gitignore
+  - .git
 min:
-  - log/
-  - build/
+  - src/
+  - target/debug/
+  - target/release/*/
+  - target/release/*.d
+  - target/release/*rlib
+  - Cargo*

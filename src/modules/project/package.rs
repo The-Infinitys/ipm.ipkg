@@ -111,10 +111,19 @@ pub fn package(opts: PackageOptions) -> Result<(), String> {
     };
 
     // Select ignore list based on PackageTarget
-    let ignore_list = match opts.target {
+    let ignore_list: Vec<String> = match opts.target {
         PackageTarget::SourceBuild => ignore_config.source_build,
-        PackageTarget::Normal => ignore_config.normal,
-        PackageTarget::Min => ignore_config.min,
+        PackageTarget::Normal => {
+            let mut list = ignore_config.source_build;
+            list.extend(ignore_config.normal);
+            list
+        }
+        PackageTarget::Min => {
+            let mut list = ignore_config.source_build;
+            list.extend(ignore_config.normal);
+            list.extend(ignore_config.min);
+            list
+        }
     };
     dprintln!("Ignore list for target {}: {:?}", opts.target, ignore_list);
 
